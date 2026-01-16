@@ -1321,6 +1321,11 @@
                             <button onclick="runRandom()"
                                 class="btn-scenario btn-random px-4 py-2 rounded-lg text-[11px] shadow-md">🎲
                                 랜덤</button>
+                            <button
+                                onclick="document.getElementById('section-tax-finance').scrollIntoView({behavior: 'smooth'})"
+                                class="btn-scenario px-3 py-2 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-lg text-[11px] font-bold shadow-sm hover:bg-indigo-100 transition flex items-center gap-1">
+                                💰 세무/재무 설정
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -1536,7 +1541,7 @@
                     </div>
 
                     <!-- 3. Expenses & Finance -->
-                    <div class="config-card space-y-6">
+                    <div id="section-tax-finance" class="config-card space-y-6">
                         <div class="flex justify-between items-center border-b border-slate-100 pb-2 mb-2">
                             <span class="text-base font-bold">3. 운영 비용 및 금융</span>
                             <span
