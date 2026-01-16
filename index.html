@@ -1333,6 +1333,17 @@
                             <button onclick="runRandom()"
                                 class="btn-scenario btn-random px-4 py-2 rounded-lg text-[11px] shadow-md">🎲
                                 랜덤</button>
+                            <!-- JSON Features -->
+                            <div class="h-6 w-px bg-slate-200 mx-1"></div>
+                            <button onclick="saveSimulation()" title="현재 설정을 JSON 파일로 저장"
+                                class="btn-scenario px-3 py-2 bg-indigo-50 border border-indigo-100 text-indigo-600 rounded-lg text-[11px] hover:bg-indigo-100 transition font-bold">
+                                💾 저장
+                            </button>
+                            <button onclick="triggerLoad()" title="JSON 설정 파일 불러오기"
+                                class="btn-scenario px-3 py-2 bg-indigo-50 border border-indigo-100 text-indigo-600 rounded-lg text-[11px] hover:bg-indigo-100 transition font-bold">
+                                📂 열기
+                            </button>
+                            <input type="file" id="load-file-input" style="display:none" accept=".json" onchange="loadSimulation(this)">
                         </div>
                     </div>
                 </div>
@@ -2136,6 +2147,61 @@
                     if (typeof calculate === 'function') calculate();
                 }, 100);
             }
+        }
+
+        function saveSimulation() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "gold_sim_config_" + new Date().toISOString().slice(0, 10).replace(/-/g, "") + ".json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        }
+
+        function triggerLoad() { document.getElementById('load-file-input').click(); }
+
+        function loadSimulation(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const loaded = JSON.parse(e.target.result);
+                    // Validate basic structure
+                    if (!loaded.f2 || !loaded.global) throw new Error("Invalid Format");
+                    state = loaded;
+
+                    // Restore UI from State
+                    ['f2', 'f3', 'f4'].forEach(f => {
+                        updateUI(`${f}-adr`);
+                        updateUI(`${f}-occ`);
+                        // Update buttons
+                        document.getElementById(`toggle-${f}`).checked = state[f].active;
+                        toggleFloor(f); // This calculates, so be careful. Just set class?
+                        // Let's rely on toggleFloor to set class and active state properly (it toggles, so we need to match checked)
+                        // Actually toggleFloor flips it based on check.
+                        
+                        updateRooms(f, state[f].rooms);
+                    });
+                    
+                    // Restore Global
+                    syncInput('loan', state.capex.simpleAmt); // updates UI + State (redundant but safe)
+                    syncInput('fixed', state.global.fixedCost);
+                    
+                    // Restore Checkboxes
+                    if(getEl('vat-toggle')) getEl('vat-toggle').checked = state.global.vat;
+                    if(getEl('tax-rate-range')) getEl('tax-rate-range').value = state.global.taxRate;
+                    updateTaxRate(state.global.taxRate);
+
+                    calculate();
+                    alert('✅ 설정을 성공적으로 불러왔습니다!');
+                } catch(err) {
+                    alert('❌ 파일 로드 실패: 올바른 JSON 파일이 아닙니다.\n' + err.message);
+                }
+                input.value = ''; // Reset
+            };
+            reader.readAsText(file);
         }
 
         function toggleSplitView() {
