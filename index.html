@@ -1623,8 +1623,7 @@
                 <div class="lg:col-span-5">
                     <div class="result-card shadow-2xl">
                         <div class="mb-10 text-center lg:text-left">
-                            <p class="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] mb-2">Monthly Net
-                                Cashflow</p>
+                            <p class="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] mb-2">Monthly Net Cashflow (After Tax)</p>
                             <div class="text-3xl md:text-4xl lg:text-6xl font-black text-white tracking-tighter"
                                 id="res-net-profit">0원</div>
                             <div id="profit-tag"
@@ -1955,7 +1954,7 @@
 
                                     <!-- Net Income -->
                                     <tr class="bg-yellow-100 text-yellow-900 border-t-2 border-yellow-400">
-                                        <td class="py-4 px-4 text-left font-black text-sm">Net Income (당기순이익)</td>
+                                        <td class="py-4 px-4 text-left font-black text-sm">Net Income (Accounting) *Diff due to Dep.</td>
                                         <td class="py-4 px-4 font-black text-xl" id="is-ni-y1">0</td>
                                         <td class="py-4 px-4 font-black text-xl text-yellow-800" id="is-ni-y2">0</td>
                                         <td class="py-4 px-4 font-black text-xl text-yellow-800" id="is-ni-y3">0</td>
@@ -2330,11 +2329,16 @@
             const mathFormulaEl = getEl('math-formula');
             if (mathFormulaEl) {
                 mathFormulaEl.innerHTML = `
-                    <div class="flex justify-between text-[10px]"><span>Sales:</span> <span>${Math.round(totalGross).toLocaleString()}원</span></div>
-                    <div class="flex justify-between text-[10px]"><span>Exp:</span> <span>${Math.round(totalOpex + fee + vat).toLocaleString()}원</span></div>
-                    <div class="flex justify-between text-[10px]"><span>Finance:</span> <span>${Math.round(interest + tax).toLocaleString()}원</span></div>
-                    <div class="text-orange-400 font-black border-t border-white/5 mt-1 pt-1 text-right text-xs">Cash Flow: ${Math.round(netCashFlow).toLocaleString()}원</div>
-                    <div class="text-slate-500 text-[9px] text-right">Net Income: ${Math.round(netIncome).toLocaleString()}원</div>
+                    <div class="space-y-1 pt-2 border-t border-white/10">
+                        <div class="flex justify-between text-[10px] text-slate-400"><span>(+) Sales</span> <span>${fwc(totalGross)}</span></div>
+                        <div class="flex justify-between text-[10px] text-slate-400"><span>(-) Total Opex</span> <span>${fwc(totalOpex + fee + vat)}</span></div>
+                        <div class="flex justify-between text-[10px] text-slate-300 font-bold border-t border-white/5 pt-1"><span>(=) EBITDA</span> <span>${fwc(ebitda)}</span></div>
+                        <div class="flex justify-between text-[10px] text-red-400"><span>(-) Interest</span> <span>${fwc(interest)}</span></div>
+                        <div class="flex justify-between text-[10px] text-red-400"><span>(-) Tax</span> <span>${fwc(tax)}</span></div>
+                        <div class="flex justify-between text-xs font-black text-white border-t border-white/10 pt-1 mt-1"><span>(=) Cash Flow</span> <span>${fwc(netCashFlow)}</span></div>
+                        <div class="flex justify-between text-[9px] text-slate-500 pt-1"><span>(Ref) Dep.</span> <span>-${fwc(depPerMonth)}</span></div>
+                        <div class="flex justify-between text-[9px] text-slate-500"><span>(Ref) Net Income</span> <span>${fwc(netIncome)}</span></div>
+                    </div>
                 `;
             }
             ['f2', 'f3', 'f4'].forEach(f => renderCalendar(f));
