@@ -354,6 +354,11 @@
                         Statement</button>
                     <button onclick="showTab('tax')" id="b-tax"
                         class="px-5 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition">세무/재무</button>
+                    <!-- Realtime Interaction Toggle -->
+                    <button onclick="toggleSplitView()" id="b-split"
+                        class="px-3 py-2 rounded-lg text-xs font-bold bg-green-500 text-white hover:bg-green-600 transition ml-2 border border-green-400">
+                        ⚡ Real-Time View (On/Off)
+                    </button>
                 </div>
             </div>
         </div>
@@ -2130,6 +2135,46 @@
                 setTimeout(() => {
                     if (typeof calculate === 'function') calculate();
                 }, 100);
+            }
+        }
+
+        function toggleSplitView() {
+            const sim = document.getElementById('gbsim');
+            const fin = document.getElementById('financial');
+            const mainContent = document.querySelector('main');
+            
+            // Check if already in split mode (by checking specific classes/layout) or use a state
+            const isSplit = sim.classList.contains('split-mode-active');
+            
+            if (!isSplit) {
+                // Activate Split View
+                sim.classList.remove('hidden', 'active'); // Handled by flex/grid
+                fin.classList.remove('hidden', 'active');
+                
+                // Set layout wrapper
+                sim.classList.add('split-mode-active');
+                
+                // We need a wrapper to hold them side by side
+                // Since they are top level sections, we might need to manipulate their parent or display properties
+                
+                // Let's force them to be visible
+                sim.style.display = 'block';
+                fin.style.display = 'block';
+                
+                // Adjust widths for desktop
+                // Assuming they are children of <main> or similar container
+                // Let's scroll to top
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                
+                alert('⚡ Real-Time Split Mode Activated!\nDesktop: Use wide screen to see Side-by-Side.\nMobile: Scroll down to see Financial Statement immediately.');
+            } else {
+                // Deactivate Split View (Return to Tab Mode)
+                sim.classList.remove('split-mode-active');
+                sim.style.display = ''; // Reset
+                fin.style.display = ''; // Reset
+                
+                // Reset to default tab (Simulator)
+                showTab('gbsim');
             }
         }
 
