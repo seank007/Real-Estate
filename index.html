@@ -352,6 +352,10 @@
                     <button onclick="showTab('financial')" id="b-financial"
                         class="px-5 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition">Financial
                         Statement</button>
+                    <button
+                        onclick="showTab('gbsim'); setTimeout(() => document.getElementById('section-tax-finance').scrollIntoView({behavior: 'smooth'}), 100);"
+                        id="b-tax" class="px-5 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition">세무/재무
+                        설정</button>
                 </div>
             </div>
         </div>
@@ -1326,11 +1330,6 @@
                             <button onclick="runRandom()"
                                 class="btn-scenario btn-random px-4 py-2 rounded-lg text-[11px] shadow-md">🎲
                                 랜덤</button>
-                            <button
-                                onclick="document.getElementById('section-tax-finance').scrollIntoView({behavior: 'smooth'})"
-                                class="btn-scenario px-3 py-2 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-lg text-[11px] font-bold shadow-sm hover:bg-indigo-100 transition flex items-center gap-1">
-                                💰 세무/재무 설정
-                            </button>
                         </div>
                     </div>
                 </div>
