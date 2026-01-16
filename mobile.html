@@ -1174,89 +1174,148 @@
             </div>
         </section>
 
-        <!-- TAB 3: ROI SIMULATOR -->
-        <section id="sim" class="tab-content space-y-8">
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                <!-- Controls -->
-                <div class="lg:col-span-4 space-y-6">
-                    <div class="bg-white p-8 rounded-3xl shadow-md border border-slate-200">
-                        <h3 class="text-xl font-bold text-slate-800 mb-8">🛠️ 시뮬레이션 설정</h3>
-                        <div class="space-y-8">
-                            <div>
-                                <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3">총
-                                    운영 객실 수 (3층 건물)</label>
-                                <input type="number" id="units" value="3" oninput="run()"
-                                    class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-lg text-indigo-600 focus:ring-2 focus:ring-indigo-500 outline-none">
-                            </div>
-                            <div>
-                                <div class="flex justify-between mb-3">
-                                    <label class="text-xs font-black text-slate-400 uppercase tracking-widest">1박 평균
-                                        객단가</label>
-                                    <span id="v-price" class="text-sm font-bold text-indigo-600">150,000원</span>
-                                </div>
-                                <input type="range" id="price" min="50000" max="500000" step="10000" value="150000"
-                                    oninput="run()" class="w-full h-2 bg-slate-200 rounded-lg appearance-none">
-                            </div>
-                            <div>
-                                <div class="flex justify-between mb-3">
-                                    <label class="text-xs font-black text-slate-400 uppercase tracking-widest">연평균 예상
-                                        가동률</label>
-                                    <span id="v-occ" class="text-sm font-bold text-indigo-600">75%</span>
-                                </div>
-                                <input type="range" id="occ" min="20" max="100" step="5" value="75" oninput="run()"
-                                    class="w-full h-2 bg-slate-200 rounded-lg appearance-none">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3">초기
-                                    투자비 (리모델링 등)</label>
-                                <input type="number" id="start" value="50000000" oninput="run()"
-                                    class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3">월
-                                    고정 운영비</label>
-                                <input type="number" id="cost" value="2500000" oninput="run()"
-                                    class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none">
-                            </div>
-                        </div>
+        <!-- TAB 3: TAX & COMPLIANCE -->
+        <section id="tax" class="tab-content hidden space-y-10">
+            <div class="bg-white p-8 md:p-12 rounded-3xl shadow-sm border border-slate-200 mt-12">
+                <div class="flex items-center gap-4 mb-8 border-b border-slate-100 pb-6">
+                    <span class="p-3 bg-indigo-50 rounded-2xl text-indigo-600">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253">
+                            </path>
+                        </svg>
+                    </span>
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-900 tracking-tight">에어비앤비 개인 사업자 세무 바이블 (2025)</h2>
+                        <p class="text-sm text-slate-500 mt-1">재무 보고 및 세무 컴플라이언스 실무 가이드</p>
                     </div>
                 </div>
 
-                <!-- Display Results -->
-                <div class="lg:col-span-8 space-y-6">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div class="bg-indigo-700 p-8 rounded-3xl text-white shadow-xl">
-                            <p class="text-indigo-200 text-[10px] font-bold uppercase tracking-widest mb-2">월 예상 매출</p>
-                            <h4 id="r-rev" class="text-2xl font-black">₩0</h4>
-                        </div>
-                        <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm">
-                            <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-2">월 예상 순수익</p>
-                            <h4 id="r-prof" class="text-2xl font-black text-slate-800">₩0</h4>
-                        </div>
-                        <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm">
-                            <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-2">투자금 회수 기간</p>
-                            <h4 id="r-time" class="text-2xl font-black text-indigo-600">0개월</h4>
-                        </div>
+                <article
+                    class="prose prose-slate max-w-none prose-headings:font-bold prose-headings:text-slate-900 prose-p:text-slate-600 prose-p:leading-relaxed prose-li:text-slate-600">
+
+                    <h3 class="text-lg text-indigo-600">1. 서론: 공유 숙박업의 제도권 진입과 재무 관리의 패러다임 전환</h3>
+                    <p>
+                        대한민국의 공유 숙박 시장은 지난 10년여간 폭발적인 성장을 거듭해 왔습니다. 초기에는 남는 방을 빌려주는 소박한 '부업'의 개념으로 시작되었으나, 현재는 전문적인
+                        인테리어와 서비스를 갖춘 '대체 숙박업'으로 자리 잡았습니다. 이러한 시장의 성장은 필연적으로 규제의 정비와 과세 체계의 강화를 불러왔습니다.
+                    </p>
+                    <p>
+                        특히 2024년 10월부터 시행된 에어비앤비의 영업신고 정보 제출 의무화와 2025년 10월로 예정된 미신고 숙소의 플랫폼 퇴출 조치는 한국 에어비앤비 호스트들에게 있어
+                        '회색 지대'의 종말을 고하는 신호탄과 같습니다. 이제 에어비앤비 운영은 단순한 임대 소득 창출 행위가 아니라, 엄격한 회계 기준과 세법을 준수해야 하는 정식 '사업'으로
+                        정의됩니다.
+                    </p>
+                    <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 my-4 not-prose">
+                        <h4 class="font-bold text-indigo-900 mb-2 text-sm flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            핵심 포인트
+                        </h4>
+                        <p class="text-sm text-indigo-800">재무 기록의 유지(Bookkeeping)는 단순히 세금을 내기 위한 의무를 넘어, 사업의 수익성을 분석하고
+                            미래의 현금 흐름을 예측하며, 나아가 세무 조사의 위험으로부터 자산을 보호하는 가장 강력한 방패입니다.</p>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="bg-white p-8 rounded-3xl border border-slate-100 h-80 flex flex-col items-center">
-                            <h4 class="text-xs font-bold text-slate-400 mb-6 uppercase">수익/지출 구조</h4>
-                            <div class="chart-container flex-1"><canvas id="donutChart"></canvas></div>
-                        </div>
-                        <div class="bg-white p-8 rounded-3xl border border-slate-100 h-80 flex flex-col items-center">
-                            <h4 class="text-xs font-bold text-slate-400 mb-6 uppercase">연간 누적 순수익 전망</h4>
-                            <div class="chart-container flex-1"><canvas id="barChart"></canvas></div>
-                        </div>
+                    <h3 class="text-lg text-indigo-600 mt-8">2. 사업자 등록과 세무 의무의 구조적 이해</h3>
+                    <p>
+                        'Income Statement'를 작성하기 위해서는 먼저 자신이 한국 세법상 어떤 위치에 있는지를 명확히 규명해야 합니다. 사업자 유형에 따라 작성해야 할 장부의 종류,
+                        보관해야 할 서류의 범위, 그리고 적용되는 세율이 근본적으로 달라지기 때문입니다.
+                    </p>
+
+                    <h4 class="text-base mt-4">2.1. 개인 사업자의 과세 유형 분류</h4>
+                    <ul class="list-disc pl-5 space-y-2">
+                        <li>
+                            <strong>간이과세자 (Simplified Taxpayer)</strong>: 연 매출 1억 400만원 미만. 낮은 세율(실효세율 3~4%)이 적용되어 초기 현금
+                            흐름 확보에 유리합니다. 단, 매입세액 환급이 불가능하므로 초기 인테리어 비용이 클 경우 불리할 수 있습니다.
+                        </li>
+                        <li>
+                            <strong>일반과세자 (General Taxpayer)</strong>: 연 매출 1억 400만원 이상. 매출세액의 10%를 납부해야 하지만, 초기 투자 비용의
+                            10%를 전액 환급받을 수 있습니다.
+                        </li>
+                    </ul>
+
+                    <h4 class="text-base mt-4">2.2. 기장 의무 (Bookkeeping Obligation)</h4>
+                    <p>대다수의 개인 호스트는 '간편장부 대상자'에 해당합니다. 복잡한 복식부기가 아닌, 가계부 형식의 간편장부(일자, 거래내용, 수입, 지출) 작성을 통해 비용 누락을 방지하고
+                        절세할 수 있습니다.</p>
+
+                    <h3 class="text-lg text-indigo-600 mt-8">3. 매출(Revenue) 인식과 증빙 서류 관리</h3>
+
+                    <h4 class="text-base mt-4">3.1. 총액주의 (Gross Principle)</h4>
+                    <p>
+                        가장 중요한 원칙은 <strong>통장에 입금된 금액(Net)이 아닌, 수수료 차감 전 총 결제 금액(Gross)을 매출로 신고</strong>해야 한다는 점입니다. 이를
+                        어길 경우 매출 누락으로 간주되어 가산세 대상이 됩니다.
+                    </p>
+                    <div class="bg-gray-50 p-4 rounded-lg my-2 text-sm font-mono border border-gray-200 not-prose">
+                        <p class="font-bold text-gray-500 mb-1">올바른 회계 처리 예시</p>
+                        <p>게스트 결제 금액: 105만원 (매출)</p>
+                        <p class="text-red-500">- 에어비앤비 수수료: 3만원 (비용/지급수수료)</p>
+                        <p>= 호스트 입금액: 102만원</p>
                     </div>
 
-                    <div
-                        class="bg-indigo-50 p-6 rounded-2xl border border-indigo-100 text-indigo-800 text-sm flex items-start">
-                        <span class="mr-3 text-xl">💡</span>
-                        <p><strong>전문가 인사이트:</strong> 3층 건물을 홍대에서 운영할 때는 각 층의 독립성을 보장하면서도, 루프탑 공간을 활용한 공용 공간 기획이 '독채형
-                            에어비앤비' 가동률을 높이는 핵심 성공 전략입니다.</p>
+                    <h3 class="text-lg text-indigo-600 mt-8">4. 비용(Expense) 관리와 적격 증빙</h3>
+                    <p>
+                        "돈을 썼다"는 사실만으로는 비용으로 인정받을 수 없습니다. 세법이 요구하는 <strong>적격 증빙(세금계산서, 계산서, 신용카드 매출전표, 현금영수증)</strong>을
+                        반드시 갖추어야 합니다.
+                    </p>
+
+                    <ul class="list-disc pl-5 space-y-2 mt-2">
+                        <li><strong>인테리어 공사비</strong>: 세금계산서 필수. 자본적 지출로 처리 시 감가상각을 통해 장기간 비용 처리 가능.</li>
+                        <li><strong>에어비앤비 수수료</strong>: 인보이스 보관. 부가세 공제는 불가능하나 종합소득세 비용 처리 가능.</li>
+                        <li><strong>청소 인건비</strong>: 단순히 계좌 이체만으로는 비용 불가. '일용근로소득 지급명세서'를 매달 제출해야 인정받을 수 있음.</li>
+                    </ul>
+
+                    <h3 class="text-lg text-indigo-600 mt-8">5. 한국형 손익계산서: '간편장부' 작성 실무</h3>
+                    <p>
+                        미국의 Schedule C나 일반적인 P&L 계정과목을 한국 국세청 서식에 맞게 매핑해야 합니다.
+                    </p>
+                    <div class="overflow-x-auto my-4 not-prose">
+                        <table class="w-full text-sm text-left border-collapse">
+                            <thead class="bg-slate-50 text-slate-700">
+                                <tr>
+                                    <th class="p-2 border border-slate-200">Global Account</th>
+                                    <th class="p-2 border border-slate-200">한국 계정과목</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="p-2 border border-slate-200">Sales/Revenue</td>
+                                    <td class="p-2 border border-slate-200">매출액 (수입금액)</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-2 border border-slate-200">Rent</td>
+                                    <td class="p-2 border border-slate-200">임차료</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-2 border border-slate-200">Utilities</td>
+                                    <td class="p-2 border border-slate-200">전력비, 수도광열비</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-2 border border-slate-200">Commissions</td>
+                                    <td class="p-2 border border-slate-200">지급수수료 (에어비앤비 수수료)</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-2 border border-slate-200">Depreciation</td>
+                                    <td class="p-2 border border-slate-200">감가상각비</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
-                </div>
+
+                    <h3 class="text-lg text-indigo-600 mt-8">6. 2025년 규제 대응 및 결론</h3>
+                    <p>
+                        2025년 10월부터 영업신고증 미제출 숙소의 예약 차단이 예고되어 있습니다. 이제 매출을 숨기는 방식의 탈세는 불가능하며, 비용을 꼼꼼히 챙기는 '절세'가 유일한
+                        해답입니다.
+                    </p>
+                    <p class="font-bold mt-4">
+                        실행 체크리스트:
+                    </p>
+                    <ul class="list-check pl-5 space-y-1">
+                        <li>✅ 사업자 유형 확인 (간이 vs 일반) 및 주업종 코드(551007) 확인</li>
+                        <li>✅ 사업용 계좌와 카드를 개설하고 홈택스에 등록</li>
+                        <li>✅ 입금액이 아닌 총 결제 금액을 매출로 기록</li>
+                        <li>✅ 인테리어(세금계산서), 청소비(원천세 신고) 등 주요 비용 4대장 관리</li>
+                    </ul>
+                </article>
             </div>
         </section>
         <!-- TAB 4: GB SIMULATOR -->
@@ -1321,10 +1380,9 @@
                             <button onclick="runRandom()"
                                 class="btn-scenario btn-random px-4 py-2 rounded-lg text-[11px] shadow-md">🎲
                                 랜덤</button>
-                            <button
-                                onclick="document.getElementById('section-tax-finance').scrollIntoView({behavior: 'smooth'})"
+                            <button onclick="showTab('financial')"
                                 class="btn-scenario px-3 py-2 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-lg text-[11px] font-bold shadow-sm hover:bg-indigo-100 transition flex items-center gap-1">
-                                💰 세무/재무 설정
+                                💰 상세 재무제표
                             </button>
                         </div>
                     </div>
@@ -1900,6 +1958,9 @@
                     </div>
                 </div>
             </div>
+
+
+
         </section>
     </main>
 
@@ -1927,14 +1988,14 @@
             </svg>
             <span class="text-[9px] font-bold">Data</span>
         </button>
-        <button onclick="showTab('sim')" id="b-sim"
+        <button onclick="showTab('tax')" id="b-tax"
             class="mobile-tab-btn flex flex-col items-center gap-1 p-2 rounded-xl transition w-full text-slate-400">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z">
+                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253">
                 </path>
             </svg>
-            <span class="text-[9px] font-bold">Calc</span>
+            <span class="text-[9px] font-bold">세무/재무</span>
         </button>
         <button onclick="showTab('gbsim')" id="b-gbsim"
             class="mobile-tab-btn flex flex-col items-center gap-1 p-2 rounded-xl transition w-full text-slate-400">
@@ -1985,7 +2046,7 @@
 
         window.onload = () => {
             initCharts();
-            run();
+            // run(); Removed
             // GB Simulator Init
             calculate();
             syncInput('loan', 350000000);
@@ -1998,7 +2059,7 @@
 
         function showTab(tabId) {
             // Update Bottom Nav Styles
-            const tabs = ['report', 'visual', 'sim', 'gbsim', 'financial'];
+            const tabs = ['report', 'visual', 'tax', 'gbsim', 'financial'];
             // If report2 is called, we treat it as report for nav highlighting, but show report2 content
             const highlightId = tabId === 'report2' ? 'report' : tabId;
 
@@ -2068,18 +2129,8 @@
                 },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
             });
-            // ROI Donut
-            dChart = new Chart(document.getElementById('donutChart'), {
-                type: 'doughnut',
-                data: { labels: ['순수익', '운영비'], datasets: [{ data: [70, 30], backgroundColor: ['#4f46e5', '#f1f5f9'], borderWidth: 0 }] },
-                options: { responsive: true, maintainAspectRatio: false, cutout: '80%', plugins: { legend: { position: 'bottom' } } }
-            });
-            // Accumulation Bar
-            bChart = new Chart(document.getElementById('barChart'), {
-                type: 'bar',
-                data: { labels: ['3개월', '6개월', '9개월', '12개월'], datasets: [{ label: '누적 수익', data: [0, 0, 0, 0], backgroundColor: '#818cf8', borderRadius: 8 }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-            });
+            // ROI Donut - Removed
+            // Accumulation Bar - Removed
         }
 
         function updatePrice(idx) {
@@ -2089,60 +2140,7 @@
             document.getElementById('pb-1').className = idx === 1 ? "px-4 py-1.5 text-xs font-bold rounded-md bg-white text-indigo-600 shadow-sm" : "px-4 py-1.5 text-xs font-medium text-slate-500";
         }
 
-        function run() {
-            const u = +document.getElementById('units').value;
-            const p = +document.getElementById('price').value;
-            const o = +document.getElementById('occ').value;
-            const s = +document.getElementById('start').value;
-            const c = +document.getElementById('cost').value;
 
-            document.getElementById('v-price').innerText = p.toLocaleString() + '원';
-            document.getElementById('v-occ').innerText = o + '%';
-
-            const rev = Math.floor(u * p * 30 * (o / 100));
-            const prof = rev - c;
-
-            document.getElementById('r-rev').innerText = '₩' + rev.toLocaleString();
-            document.getElementById('r-prof').innerText = '₩' + prof.toLocaleString();
-
-            if (prof > 0) {
-                const months = Math.ceil(s / prof);
-                document.getElementById('r-time').innerText = months + '개월';
-                dChart.data.datasets[0].data = [prof, c];
-                dChart.data.datasets[0].backgroundColor = ['#4f46e5', '#f1f5f9'];
-            } else {
-                document.getElementById('r-time').innerText = '회수 불가';
-                dChart.data.datasets[0].data = [0, 100];
-                dChart.data.datasets[0].backgroundColor = ['#f1f5f9', '#ef4444'];
-            }
-            dChart.update();
-
-            bChart.data.datasets[0].data = [prof * 3, prof * 6, prof * 9, prof * 12];
-            bChart.update();
-
-            // Sync to GB Simulator State & Financial Statement (Auto-Update)
-            if (typeof state !== 'undefined') {
-                ['f2', 'f3', 'f4'].forEach(f => {
-                    state[f].adr = p;
-                    state[f].occ = o;
-                });
-                state.capex.simpleAmt = s;
-                state.global.fixedCost = c;
-
-                // Update GB Sim UI inputs to match
-                if (typeof syncAllInputs === 'function') {
-                    ['f2', 'f3', 'f4'].forEach(f => {
-                        updateUI(`${f}-adr`);
-                        updateUI(`${f}-occ`);
-                    });
-                    updateUI('loan');
-                    updateUI('fixed');
-                }
-
-                // Trigger Detailed Calculation
-                if (typeof calculate === 'function') calculate();
-            }
-        }
 
         // --- GB Simulator Functions ---
         const fwc = (n) => Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -2387,7 +2385,7 @@
 
             // --- Cash Flow Statement ---
             // Operating CF = Net Income + Depreciation (Non-cash expense added back)
-            const ni = ebt - tax; // Monthly Net Income
+            const ni = netProfit; // Monthly Net Income
             const ocfAnnual = (ni + depPerMonth) * 12;
             set('fs-cf-ni', fwc(y1_NI));
             set('fs-cf-dep', fwc(y1_Dep));
