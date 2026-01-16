@@ -324,11 +324,11 @@
         <div class="max-w-6xl mx-auto px-4 py-8">
             <div class="flex flex-col md:flex-row justify-between items-center">
                 <div>
-                    <h1 class="text-3xl font-bold tracking-tight">Gold Building Financial Simulation</h1>
+                    <h1 class="text-2xl md:text-3xl font-bold tracking-tight">Gold Building Financial Simulation</h1>
                     <p class="text-indigo-200 mt-2 italic">Research Basis & Financial Simulation for 3-Story Buildings
                     </p>
                 </div>
-                <div class="mt-6 md:mt-0 bg-indigo-800/50 p-1 rounded-xl flex">
+                <div class="mt-6 md:mt-0 bg-indigo-800/50 p-1 rounded-xl flex flex-wrap gap-1 justify-center">
                     <button onclick="showTab('report')" id="b-report"
                         class="px-5 py-2 rounded-lg text-sm font-bold bg-white text-indigo-900 shadow-md">연구
                         보고서</button>
@@ -1268,7 +1268,7 @@
                             <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Asset
                                 Management</span>
                         </div>
-                        <h1 class="text-4xl font-black text-slate-900 tracking-tighter leading-tight mb-3">
+                        <h1 class="text-3xl md:text-4xl font-black text-slate-900 tracking-tighter leading-tight mb-3">
                             Gold Building<br><span
                                 class="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-500">Financial
                                 Simulation</span>
@@ -1298,7 +1298,7 @@
 
                         <!-- Scenario Buttons -->
                         <div class="flex flex-wrap items-center gap-2">
-                            <div class="header-input-wrapper w-48" title="목표 수익 입력 후 엔터">
+                            <div class="header-input-wrapper w-full md:w-48" title="목표 수익 입력 후 엔터">
                                 <span class="header-input-label">Target Profit</span>
                                 <input type="text" id="target-profit-inline" class="header-input" placeholder="0"
                                     onkeydown="if(event.key==='Enter') runTargetProfitScenario(this.value)"
@@ -1345,7 +1345,7 @@
                                 </div>
                             </div>
                             <div class="text-right flex items-baseline gap-1">
-                                <input type="text" id="loan-input-num" class="typing-input !text-lg !w-44"
+                                <input type="text" id="loan-input-num" class="typing-input !text-lg w-32 md:!w-44"
                                     value="350,000,000" oninput="handleTyping('loan', this.value)">
                                 <span class="text-[10px] font-bold text-slate-400 uppercase">원</span>
                             </div>
@@ -1357,7 +1357,7 @@
                         </div>
 
                         <div id="capex-detail" class="hidden animate-fade-in border-t border-slate-100 pt-4 mt-4">
-                            <div class="grid grid-cols-2 gap-6 mb-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
                                 <div>
                                     <div class="flex justify-between mb-1"><span
                                             class="text-[10px] font-bold text-slate-500 uppercase">평당 공사비</span><span
@@ -1410,12 +1410,12 @@
                                         class="btn-toggle px-2 py-1 rounded-md text-[10px]" id="f2-r4">4실</button>
                                 </div>
                             </div>
-                            <div class="grid grid-cols-2 gap-8">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div>
                                     <div class="flex justify-between items-baseline mb-1">
                                         <span class="text-[10px] font-bold text-slate-400 uppercase">1박 요금</span>
                                         <div class="flex items-baseline gap-1">
-                                            <input type="text" id="f2-adr-num" class="typing-input !w-32"
+                                            <input type="text" id="f2-adr-num" class="typing-input w-24 md:!w-32"
                                                 oninput="handleTyping('f2-adr', this.value)">
                                             <span class="text-[10px] font-bold text-slate-400">원</span>
                                         </div>
@@ -1459,12 +1459,12 @@
                                         class="btn-toggle px-2 py-1 rounded-md text-[10px]" id="f3-r4">4실</button>
                                 </div>
                             </div>
-                            <div class="grid grid-cols-2 gap-8">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div>
                                     <div class="flex justify-between items-baseline mb-1">
                                         <span class="text-[10px] font-bold text-slate-400 uppercase">1박 요금</span>
                                         <div class="flex items-baseline gap-1">
-                                            <input type="text" id="f3-adr-num" class="typing-input !w-32"
+                                            <input type="text" id="f3-adr-num" class="typing-input w-24 md:!w-32"
                                                 oninput="handleTyping('f3-adr', this.value)">
                                             <span class="text-[10px] font-bold text-slate-400">원</span>
                                         </div>
@@ -1503,12 +1503,12 @@
                                         class="btn-toggle px-2 py-1 rounded-md text-[10px]" id="f4-r2">2실</button>
                                 </div>
                             </div>
-                            <div class="grid grid-cols-2 gap-8">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div>
                                     <div class="flex justify-between items-baseline mb-1">
                                         <span class="text-[10px] font-bold text-slate-400 uppercase">1박 요금</span>
                                         <div class="flex items-baseline gap-1">
-                                            <input type="text" id="f4-adr-num" class="typing-input !w-32"
+                                            <input type="text" id="f4-adr-num" class="typing-input w-24 md:!w-32"
                                                 oninput="handleTyping('f4-adr', this.value)">
                                             <span class="text-[10px] font-bold text-slate-400">원</span>
                                         </div>
@@ -1541,12 +1541,12 @@
                                 & Finance</span>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-8 pb-6 border-b border-slate-100">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pb-6 border-b border-slate-100">
                             <div>
                                 <div class="flex justify-between items-baseline mb-1">
                                     <span class="text-[10px] font-bold text-slate-500 block uppercase">월 고정 비용</span>
                                     <div class="flex items-baseline gap-1">
-                                        <input type="text" id="fixed-cost-num" class="typing-input !w-32"
+                                        <input type="text" id="fixed-cost-num" class="typing-input w-28 md:!w-32"
                                             oninput="handleTyping('fixed', this.value)">
                                         <span class="text-[10px] font-bold text-slate-400">원</span>
                                     </div>
@@ -1615,7 +1615,7 @@
                         <div class="mb-10 text-center lg:text-left">
                             <p class="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] mb-2">Monthly Net
                                 Cashflow</p>
-                            <div class="text-4xl lg:text-6xl font-black text-white tracking-tighter"
+                            <div class="text-3xl md:text-4xl lg:text-6xl font-black text-white tracking-tighter"
                                 id="res-net-profit">0원</div>
                             <div id="profit-tag"
                                 class="mt-4 inline-block px-4 py-1 rounded-full text-[9px] font-black tracking-widest bg-slate-700 text-slate-300 uppercase">
