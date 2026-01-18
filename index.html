@@ -1,0 +1,2449 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <script>
+        if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+            // Check if we are not already on mobile.html (to avoid loops if logic changes)
+            if (!window.location.href.includes('mobile.html')) {
+                window.location.href = "mobile.html";
+            }
+        }
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gold Building Financial Simulation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap"
+        rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800;900&display=swap');
+    </style>
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f3f4f6;
+            color: #1f2937;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 350px;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .report-section h3 {
+            border-left: 4px solid #4f46e5;
+            padding-left: 1rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+            color: #1e1b4b;
+        }
+
+        input[type=range] {
+            accent-color: #4f46e5;
+        }
+
+        /* GB Simulator Styles */
+        .gb-sim-font {
+            font-family: 'Pretendard', sans-serif;
+        }
+
+        .config-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 1.25rem;
+            padding: 1.5rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+        }
+
+        .config-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+        }
+
+        .config-card.inactive .floor-controls-area {
+            opacity: 0.3;
+            pointer-events: none;
+            filter: grayscale(1);
+        }
+
+        .config-card.inactive {
+            background-color: #f8fafc;
+            border-style: dashed;
+            border-color: #cbd5e1;
+        }
+
+        .result-card {
+            background: linear-gradient(145deg, #1e293b, #0f172a);
+            color: white;
+            border-radius: 1.5rem;
+            padding: 2rem;
+            position: sticky;
+            top: 2rem;
+            box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            max-height: calc(100vh - 4rem);
+            overflow-y: auto;
+        }
+
+        /* GB Slider Customization */
+        .gb-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 5px;
+            background: #e2e8f0;
+            border-radius: 999px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .gb-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: #ea580c;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(234, 88, 12, 0.3);
+            border: 2px solid white;
+            transition: transform 0.1s;
+        }
+
+        .gb-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+        }
+
+        .typing-input {
+            background-color: transparent;
+            border-bottom: 2px solid #e2e8f0;
+            padding: 0.1rem 0;
+            font-weight: 800;
+            color: #ea580c;
+            width: 100%;
+            text-align: right;
+            outline: none;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+        }
+
+        .typing-input:focus {
+            border-color: #ea580c;
+        }
+
+        .btn-toggle {
+            transition: all 0.2s;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #64748b;
+        }
+
+        .btn-toggle:hover {
+            background: #f1f5f9;
+        }
+
+        .btn-toggle.active {
+            border-color: #ea580c;
+            background-color: #fff7ed;
+            color: #ea580c;
+            font-weight: 800;
+            box-shadow: inset 0 0 0 1px #ea580c;
+        }
+
+        .btn-scenario {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            font-weight: 700;
+        }
+
+        .btn-scenario:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-random {
+            background: linear-gradient(135deg, #8b5cf6, #d946ef);
+            color: white;
+            border: none;
+        }
+
+        .header-input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.75rem;
+            padding: 0.4rem 0.8rem;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s;
+        }
+
+        .header-input-wrapper:focus-within {
+            border-color: #ea580c;
+            transform: translateY(-1px);
+        }
+
+        .header-input-label {
+            font-size: 0.6rem;
+            font-weight: 800;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            position: absolute;
+            top: 0.25rem;
+            left: 0.8rem;
+        }
+
+        .header-input {
+            background: transparent;
+            border: none;
+            font-weight: 800;
+            font-size: 1rem;
+            color: #1e293b;
+            width: 100%;
+            text-align: right;
+            outline: none;
+            padding-top: 0.7rem;
+        }
+
+        .loan-option {
+            cursor: pointer;
+            border: 2px solid transparent;
+            border-radius: 1rem;
+            transition: all 0.2s;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            position: relative;
+        }
+
+        .loan-option.active {
+            border-color: #ea580c;
+            background-color: #fff7ed;
+        }
+
+        .math-box {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            color: #94a3b8;
+            line-height: 1.6;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 3px;
+            margin-top: 8px;
+        }
+
+        .cal-day {
+            aspect-ratio: 1;
+            border-radius: 2px;
+            background: rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0;
+            transition: all 0.2s ease;
+        }
+
+        .cal-day.booked {
+            background-color: #ea580c;
+            box-shadow: 0 0 4px rgba(234, 88, 12, 0.4);
+        }
+
+        .mini-cal-box {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 0.75rem;
+            padding: 0.75rem;
+            flex: 1;
+        }
+
+        .mini-cal-title {
+            font-size: 9px;
+            font-weight: 900;
+            color: #94a3b8;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .bank-select-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.4rem;
+        }
+
+        .bank-btn {
+            text-align: left;
+            padding: 0.5rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            background: white;
+            font-size: 0.8rem;
+        }
+
+        .bank-btn.active {
+            border-color: #ea580c;
+            background: #fff7ed;
+        }
+    </style>
+    <!-- Chosen Palette: Indigo & Slate (Academic & Professional) -->
+    <!-- Application Structure Plan: 
+         - A comprehensive dashboard combining qualitative analysis (The Research Report) and quantitative simulation (ROI Tool).
+         - Tab 1: Detailed Research Report (Basis of data, type analysis, market factors).
+         - Tab 2: Market Data Visualizations (Price and Trend charts).
+         - Tab 3: Interactive 3-Story Building ROI Simulator.
+         - Why: This structure provides the 'logic' behind the numbers before the user plays with the 'simulation', ensuring informed decision-making.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+
+<body class="antialiased">
+
+    <!-- Full-screen Globe Container -->
+    <div id="globeViz" class="fixed inset-0 z-0 bg-slate-900 transition-opacity duration-1000 opacity-0 pointer-events-none"></div>
+
+    <!-- Header -->
+    <header class="relative z-50 bg-slate-900/90 backdrop-blur-md border-b border-indigo-500/30 shadow-2xl transition-all duration-500" id="main-header">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex flex-col lg:flex-row justify-between items-center gap-4">
+                <div onclick="showTab('intro')" class="group cursor-pointer text-center lg:text-left hover:scale-[1.02] transition-transform duration-300">
+                    <h1 class="text-3xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-indigo-200 to-indigo-400 group-hover:to-white transition-all drop-shadow-sm">Gold Building</h1>
+                    <p class="text-indigo-300/80 text-xs font-bold tracking-widest mt-1 group-hover:text-indigo-200 transition-colors uppercase">Research Basis & Financial Simulation
+                    </p>
+                </div>
+                <div class="mt-4 lg:mt-0 bg-white/5 backdrop-blur-sm border border-white/10 p-1.5 rounded-2xl flex flex-wrap gap-1 justify-center shadow-inner">
+                    <button onclick="showTab('gbsim')" id="b-gbsim"
+                        class="px-4 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-white/10 transition-all">Gold Building
+                        Simulation</button>
+                    <button onclick="showTab('report')" id="b-report"
+                        class="px-4 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-white/10 transition-all">Research</button>
+                    <button onclick="showTab('visual')" id="b-visual"
+                        class="px-4 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-white/10 transition-all">Data Viz</button>
+                    <button onclick="showTab('sim')" id="b-sim"
+                        class="px-4 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-white/10 transition-all">Simple ROI</button>
+                    <button onclick="showTab('financial')" id="b-financial"
+                        class="px-4 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-white/10 transition-all">Financials</button>
+                    <button onclick="showTab('building-situation')" id="b-building-situation"
+                        class="px-4 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-white/10 transition-all">Situation</button>
+                    <!-- Realtime Interaction Toggle -->
+                    <button onclick="toggleSplitView()" id="b-split"
+                        class="px-4 py-2 rounded-xl text-xs font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 hover:bg-emerald-500 hover:text-white transition-all ml-1 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
+                        ⚡ LIVE VIEW
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 py-10">
+
+        <!-- TAB 0: INTRO (3D MAP) -->
+        <section id="intro" class="tab-content active h-full pointer-events-none fixed inset-0 z-0">
+            <div class="w-full h-full flex items-center justify-center">
+                <!-- Content overlay (Centered) -->
+                <div id="intro-overlay-center" class="z-10 text-center max-w-4xl pointer-events-auto animate-float transition-all duration-1000 ease-in-out">
+                <div class="mb-10 space-y-4">
+                    <span class="inline-block py-1.5 px-4 rounded-full bg-indigo-500/10 border border-indigo-400/30 text-indigo-300 text-xs font-black uppercase tracking-[0.3em] backdrop-blur-md animate-pulse">
+                        Korea Real Estate Intelligence
+                    </span>
+                    <h2 class="text-6xl md:text-8xl font-black text-white tracking-tighter drop-shadow-2xl leading-none">
+                        GOLD<br>
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-white to-cyan-400">BUILDING</span>
+                    </h2>
+                    <p class="text-xl md:text-2xl text-slate-300 font-light drop-shadow-lg tracking-wide">
+                        Financial Simulation & Valuation
+                    </p>
+                </div>
+
+                <div class="flex flex-wrap justify-center gap-4 animate-[fadeIn_1s_ease-in_forwards_0.5s] opacity-0">
+                    <button onclick="startExperience()" 
+                        class="px-10 py-4 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-black rounded-full backdrop-blur-md shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:shadow-[0_0_50px_rgba(255,255,255,0.3)] hover:scale-105 transition-all transform flex items-center gap-2 group text-sm uppercase tracking-[0.2em] hover:border-white/50">
+                        START
+                    </button>
+                </div>
+            </div>
+            </div>
+        </section>
+
+        <style>
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(10px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+            .animate-float {
+                animation: float 6s ease-in-out infinite;
+            }
+            @keyframes float {
+                0% { transform: translateY(0px); }
+                50% { transform: translateY(-10px); }
+                100% { transform: translateY(0px); }
+            }
+        </style>
+
+        <!-- TAB 1: RESEARCH REPORT -->
+        <!-- TAB 1: RESEARCH REPORT -->
+        <section id="report" class="tab-content space-y-10">
+            <div
+                class="bg-white p-8 md:p-12 rounded-3xl shadow-sm border border-slate-200 leading-relaxed text-slate-700">
+
+                <!-- Internal Navigation for Reports -->
+                <div class="flex md:justify-center justify-start mb-10 border-b border-slate-200 pb-4 overflow-x-auto">
+                    <div class="bg-slate-100 p-1 rounded-xl inline-flex shrink-0 whitespace-nowrap">
+                        <button onclick="switchReportSubTab('r1')" id="btn-sub-r1"
+                            class="px-6 py-2 rounded-lg font-bold text-sm bg-white text-indigo-900 shadow-sm transition-all">전략적
+                            타당성 분석</button>
+                        <button onclick="switchReportSubTab('r2')" id="btn-sub-r2"
+                            class="px-6 py-2 rounded-lg font-bold text-sm text-slate-500 hover:text-slate-800 transition-all">시장
+                            심층 분석</button>
+                        <button onclick="switchReportSubTab('tax')" id="btn-sub-tax"
+                            class="px-6 py-2 rounded-lg font-bold text-sm text-slate-500 hover:text-slate-800 transition-all">세무/재무
+                            가이드</button>
+                    </div>
+                </div>
+
+                <div id="report1-inner" class="max-w-6xl mx-auto report-section animated fadeIn">
+                    <div class="bg-white p-6 md:p-10 rounded-3xl shadow-sm border border-slate-200">
+                        <div class="flex items-center gap-4 mb-6">
+                            <div class="p-3 bg-indigo-50 rounded-2xl text-indigo-600">
+                                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.5v11m0-11C10.5 5.8 8.8 5.5 7.2 5.5S3.9 5.8 3 6.5v11c.9-.7 2.6-1 4.2-1s3.3.3 4.8 1.1m0-11c1.5-.7 3.2-1 4.8-1s3.3.3 4.2 1v11c-.9-.7-2.6-1-4.2-1s-3.3.3-4.8 1.1" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h2 class="text-2xl md:text-3xl font-black text-slate-900">전략적 타당성 분석</h2>
+                                <p class="text-sm text-slate-500">홍대 에어비앤비 사업 수익성 분석 (PDF 원본)</p>
+                            </div>
+                        </div>
+                        <div class="rounded-2xl overflow-hidden border border-slate-200 shadow-sm">
+                            <object data="홍대 에어비앤비 사업 수익성 분석 1.pdf#view=FitH" type="application/pdf" class="w-full h-[85vh]">
+                                <p class="p-4 text-sm text-slate-600">PDF를 불러오지 못했습니다. <a class="text-indigo-600 underline" href="홍대 에어비앤비 사업 수익성 분석 1.pdf" target="_blank" rel="noreferrer">새 창에서 열기</a></p>
+                            </object>
+                        </div>
+                    </div>
+                </div>
+                <!-- 연구보고서 2 섹션 (별도 탭에서 표시) -->
+                <div id="report2-content-section" class="hidden max-w-6xl mx-auto report-section animated fadeIn">
+                    <div class="bg-white p-6 md:p-10 rounded-3xl shadow-sm border border-slate-200">
+                        <div class="flex items-center gap-4 mb-6">
+                            <div class="p-3 bg-indigo-50 rounded-2xl text-indigo-600">
+                                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h2 class="text-2xl md:text-3xl font-black text-slate-900">시장 심층 분석</h2>
+                                <p class="text-sm text-slate-500">홍대 숙박 시장 심층 분석 및 수익형 부동산 전략 (PDF 원본)</p>
+                            </div>
+                        </div>
+                        <div class="rounded-2xl overflow-hidden border border-slate-200 shadow-sm">
+                            <object data="2.pdf#view=FitH" type="application/pdf" class="w-full h-[85vh]">
+                                <p class="p-4 text-sm text-slate-600">PDF를 불러오지 못했습니다. <a class="text-indigo-600 underline" href="2.pdf" target="_blank" rel="noreferrer">새 창에서 열기</a></p>
+                            </object>
+                        </div>
+                    </div>
+                </div>
+                <!-- 세무 리포트 섹션 -->
+                <div id="report-tax-section" class="hidden max-w-6xl mx-auto report-section animated fadeIn">
+                    <div class="bg-white p-6 md:p-10 rounded-3xl shadow-sm border border-slate-200">
+                        <div class="flex items-center gap-4 mb-6">
+                            <div class="p-3 bg-indigo-50 rounded-2xl text-indigo-600">
+                                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17l-3-3 3-3m6 6l3-3-3-3" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h2 class="text-2xl md:text-3xl font-black text-slate-900">세무/재무 가이드</h2>
+                                <p class="text-sm text-slate-500">숙박업 수익률·재무 가이드 (PDF 원본)</p>
+                            </div>
+                        </div>
+                        <div class="rounded-2xl overflow-hidden border border-slate-200 shadow-sm">
+                            <object data="홍대 숙박업 수익률 분석 22.pdf#view=FitH" type="application/pdf" class="w-full h-[85vh]">
+                                <p class="p-4 text-sm text-slate-600">PDF를 불러오지 못했습니다. <a class="text-indigo-600 underline" href="홍대 숙박업 수익률 분석 22.pdf" target="_blank" rel="noreferrer">새 창에서 열기</a></p>
+                            </object>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2: VISUALIZATIONS -->
+        <section id="visual" class="tab-content space-y-10">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Price Chart Card -->
+                <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-200">
+                    <div class="flex justify-between items-center mb-8">
+                        <h3 class="text-lg font-bold text-slate-800">숙박 유형별 가격 비교</h3>
+                        <div class="flex bg-slate-100 p-1 rounded-lg">
+                            <button onclick="updatePrice(0)" id="pb-0"
+                                class="px-4 py-1.5 text-xs font-bold rounded-md bg-white text-indigo-600 shadow-sm">주중</button>
+                            <button onclick="updatePrice(1)" id="pb-1"
+                                class="px-4 py-1.5 text-xs font-medium text-slate-500">주말</button>
+                        </div>
+                    </div>
+                    <div class="chart-container"><canvas id="priceChart"></canvas></div>
+                </div>
+                <!-- Trend Chart Card -->
+                <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 text-center">
+                    <h3 class="text-lg font-bold text-slate-800 mb-8">월별 예상 가동률 추이</h3>
+                    <div class="chart-container"><canvas id="trendChart"></canvas></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: ROI SIMULATOR -->
+        <section id="sim" class="tab-content space-y-8">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- Controls -->
+                <div class="lg:col-span-4 space-y-6">
+                    <div class="bg-white p-8 rounded-3xl shadow-md border border-slate-200">
+                        <h3 class="text-xl font-bold text-slate-800 mb-8">🛠️ 시뮬레이션 설정</h3>
+                        <div class="space-y-8">
+                            <div>
+                                <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3">총
+                                    운영 객실 수 (3층 건물)</label>
+                                <input type="number" id="units" value="3" oninput="run()"
+                                    class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-lg text-indigo-600 focus:ring-2 focus:ring-indigo-500 outline-none">
+                            </div>
+                            <div>
+                                <div class="flex justify-between mb-3">
+                                    <label class="text-xs font-black text-slate-400 uppercase tracking-widest">1박 평균
+                                        객단가</label>
+                                    <span id="v-price" class="text-sm font-bold text-indigo-600">150,000원</span>
+                                </div>
+                                <input type="range" id="price" min="50000" max="500000" step="10000" value="150000"
+                                    oninput="run()" class="w-full h-2 bg-slate-200 rounded-lg appearance-none">
+                            </div>
+                            <div>
+                                <div class="flex justify-between mb-3">
+                                    <label class="text-xs font-black text-slate-400 uppercase tracking-widest">연평균 예상
+                                        가동률</label>
+                                    <span id="v-occ" class="text-sm font-bold text-indigo-600">75%</span>
+                                </div>
+                                <input type="range" id="occ" min="20" max="100" step="5" value="75" oninput="run()"
+                                    class="w-full h-2 bg-slate-200 rounded-lg appearance-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3">초기
+                                    투자비 (리모델링 등)</label>
+                                <input type="number" id="start" value="50000000" oninput="run()"
+                                    class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3">월
+                                    고정 운영비</label>
+                                <input type="number" id="cost" value="2500000" oninput="run()"
+                                    class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Display Results -->
+                <div class="lg:col-span-8 space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-indigo-700 p-8 rounded-3xl text-white shadow-xl">
+                            <p class="text-indigo-200 text-[10px] font-bold uppercase tracking-widest mb-2">월 예상 매출</p>
+                            <h4 id="r-rev" class="text-2xl font-black">₩0</h4>
+                        </div>
+                        <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm">
+                            <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-2">월 예상 순수익</p>
+                            <h4 id="r-prof" class="text-2xl font-black text-slate-800">₩0</h4>
+                        </div>
+                        <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm">
+                            <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-2">투자금 회수 기간</p>
+                            <h4 id="r-time" class="text-2xl font-black text-indigo-600">0개월</h4>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-white p-8 rounded-3xl border border-slate-100 h-80 flex flex-col items-center">
+                            <h4 class="text-xs font-bold text-slate-400 mb-6 uppercase">수익/지출 구조</h4>
+                            <div class="chart-container flex-1"><canvas id="donutChart"></canvas></div>
+                        </div>
+                        <div class="bg-white p-8 rounded-3xl border border-slate-100 h-80 flex flex-col items-center">
+                            <h4 class="text-xs font-bold text-slate-400 mb-6 uppercase">연간 누적 순수익 전망</h4>
+                            <div class="chart-container flex-1"><canvas id="barChart"></canvas></div>
+                        </div>
+                    </div>
+
+                    <div
+                        class="bg-indigo-50 p-6 rounded-2xl border border-indigo-100 text-indigo-800 text-sm flex items-start">
+                        <span class="mr-3 text-xl">💡</span>
+                        <p><strong>전문가 인사이트:</strong> 3층 건물을 홍대에서 운영할 때는 각 층의 독립성을 보장하면서도, 루프탑 공간을 활용한 공용 공간 기획이 '독채형
+                            에어비앤비' 가동률을 높이는 핵심 성공 전략입니다.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section id="building-situation" class="tab-content space-y-10">
+            <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-200">
+                <h2 class="text-3xl font-black text-slate-900 mb-8 text-center">Building Situation Analysis</h2>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-start max-w-4xl mx-auto py-8">
+                    <!-- Current -->
+                    <div class="flex flex-col items-center">
+                        <h3 class="text-xl font-bold text-slate-700 mb-6 border-b-2 border-slate-200 pb-2">(현재) Current
+                        </h3>
+                        <div class="w-64 space-y-1 relative">
+                            <!-- 4F -->
+                            <div
+                                class="h-24 w-1/2 ml-auto border-2 border-blue-400 bg-blue-50 flex flex-col items-center justify-center relative rounded-t-lg shadow-sm">
+                                <span class="font-black text-blue-800 text-lg">4F</span>
+                                <input type="text" value="0" onkeyup="handleCurrentRentChange(this, 'f4')"
+                                    class="w-20 text-center text-xs bg-white/50 border border-blue-200 rounded px-1 py-0.5 mt-1 focus:outline-none focus:bg-white"
+                                    placeholder="월세 입력">
+                                <div class="absolute -left-20 text-[10px] text-blue-600 font-bold w-16 text-right pr-2">
+                                    임대 →</div>
+                            </div>
+                            <!-- 3F -->
+                            <div
+                                class="h-24 border-2 border-red-400 bg-red-50 flex flex-col items-center justify-center relative shadow-sm">
+                                <span class="font-black text-red-800 text-lg">3F (주택)</span>
+                                <input type="text" value="0" onkeyup="handleCurrentRentChange(this, 'f3')"
+                                    class="w-20 text-center text-xs bg-white/50 border border-red-200 rounded px-1 py-0.5 mt-1 focus:outline-none focus:bg-white"
+                                    placeholder="월세 입력">
+                                <div
+                                    class="absolute -left-28 text-[10px] text-red-600 font-bold w-24 text-right pr-2 leading-tight">
+                                    현재 거주<br>(자가) →</div>
+                            </div>
+                            <!-- 2F -->
+                            <div
+                                class="h-24 border-2 border-blue-400 bg-blue-50 flex flex-col items-center justify-center relative shadow-sm">
+                                <span class="font-black text-blue-800 text-lg">2F</span>
+                                <input type="text" value="5,000,000" onkeyup="handleCurrentRentChange(this, 'f2')"
+                                    class="w-20 text-center text-xs bg-white/50 border border-blue-200 rounded px-1 py-0.5 mt-1 focus:outline-none focus:bg-white"
+                                    placeholder="월세 입력">
+                                <div class="absolute -left-20 text-[10px] text-blue-600 font-bold w-16 text-right pr-2">
+                                    임대 →</div>
+                            </div>
+                            <!-- 1F -->
+                            <div
+                                class="h-24 border-2 border-blue-400 bg-blue-50 flex flex-col items-center justify-center relative shadow-sm">
+                                <span class="font-black text-blue-800 text-lg">1F</span>
+                                <input type="text" value="0" onkeyup="handleCurrentRentChange(this, 'f1')"
+                                    class="w-20 text-center text-xs bg-white/50 border border-blue-200 rounded px-1 py-0.5 mt-1 focus:outline-none focus:bg-white"
+                                    placeholder="월세 입력">
+                                <div class="absolute -left-20 text-[10px] text-blue-600 font-bold w-16 text-right pr-2">
+                                    임대 →</div>
+                            </div>
+                            <!-- B1 -->
+                            <div
+                                class="h-24 border-2 border-green-500 bg-green-50 flex flex-col items-center justify-center relative rounded-b-lg shadow-sm">
+                                <span class="font-black text-green-800 text-lg">B1</span>
+                                <input type="text" value="0" onkeyup="handleCurrentRentChange(this, 'b1')"
+                                    class="w-20 text-center text-xs bg-white/50 border border-green-200 rounded px-1 py-0.5 mt-1 focus:outline-none focus:bg-white"
+                                    placeholder="월세 입력">
+                                <div
+                                    class="absolute -left-24 text-[10px] text-green-600 font-bold w-20 text-right pr-2">
+                                    공유오피스 →</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Plan -->
+                    <div class="flex flex-col items-center">
+                        <h3 class="text-xl font-bold text-slate-700 mb-6 border-b-2 border-slate-200 pb-2">(계획) Plan
+                            (Maybe)</h3>
+                        <div class="w-64 space-y-1 relative" id="plan-stack">
+
+                            <!-- 4F (Interactive) -->
+                            <div id="plan-f4" onclick="toggleDiagramFloor('f4')"
+                                class="cursor-pointer transition-all duration-300 h-24 w-1/2 ml-auto border-2 flex items-center justify-center relative rounded-t-lg shadow-sm hover:scale-[1.02] group">
+                                <span class="font-black text-lg">4F</span>
+                                <div
+                                    class="status-badge absolute right-full mr-2 px-2 py-1 rounded text-[10px] font-bold whitespace-nowrap hidden md:block opacity-0 group-hover:opacity-100 transition-opacity">
+                                </div>
+                            </div>
+
+                            <!-- 3F (Interactive) -->
+                            <div id="plan-f3" onclick="toggleDiagramFloor('f3')"
+                                class="cursor-pointer transition-all duration-300 h-24 border-2 flex items-center justify-center relative shadow-sm hover:scale-[1.02] group">
+                                <span class="font-black text-lg">3F</span>
+                                <div
+                                    class="status-badge absolute right-full mr-2 px-2 py-1 rounded text-[10px] font-bold whitespace-nowrap hidden md:block opacity-0 group-hover:opacity-100 transition-opacity">
+                                </div>
+                            </div>
+
+                            <!-- 2F (Interactive) -->
+                            <div id="plan-f2" onclick="toggleDiagramFloor('f2')"
+                                class="cursor-pointer transition-all duration-300 h-24 border-2 flex items-center justify-center relative shadow-sm hover:scale-[1.02] group">
+                                <span class="font-black text-lg">2F</span>
+                                <div
+                                    class="status-badge absolute right-full mr-2 px-2 py-1 rounded text-[10px] font-bold whitespace-nowrap hidden md:block opacity-0 group-hover:opacity-100 transition-opacity">
+                                </div>
+                            </div>
+
+                            <!-- Remodeling Loan Annotation (Dynamic visibility handled by JS) -->
+
+
+                            <!-- 1F (Interactive) -->
+                            <div id="plan-f1" onclick="toggleDiagramFloor('f1')"
+                                class="cursor-pointer transition-all duration-300 h-24 border-2 flex items-center justify-center relative shadow-sm rounded-t-sm mt-1 hover:scale-[1.02] group">
+                                <span class="font-black text-lg">1F</span>
+                                <div
+                                    class="status-badge absolute right-full mr-2 px-2 py-1 rounded text-[10px] font-bold whitespace-nowrap hidden md:block opacity-0 group-hover:opacity-100 transition-opacity">
+                                </div>
+                                <div
+                                    class="absolute -left-20 text-[10px] text-blue-400 font-bold w-16 text-right pr-2 group-hover:opacity-0 transition-opacity">
+                                    임대 →</div>
+                            </div>
+
+                            <!-- B1 (Interactive) -->
+                            <div id="plan-b1" onclick="toggleDiagramFloor('b1')"
+                                class="cursor-pointer transition-all duration-300 h-24 border-2 flex items-center justify-center relative rounded-b-lg shadow-sm hover:scale-[1.02] group">
+                                <span class="font-black text-lg">B1</span>
+                                <div
+                                    class="status-badge absolute right-full mr-2 px-2 py-1 rounded text-[10px] font-bold whitespace-nowrap hidden md:block opacity-0 group-hover:opacity-100 transition-opacity">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Migration Info -->
+                        <div
+                            class="mt-8 text-center bg-slate-50 p-5 rounded-2xl border border-dashed border-slate-300 w-64 shadow-inner">
+                            <div class="text-xl mb-1">➕</div>
+                            <p class="font-bold text-slate-700 text-sm mb-2">주택 거주 불가 이슈</p>
+                            <div
+                                class="text-xs text-slate-500 bg-white p-3 rounded-lg border border-slate-100 shadow-sm">
+                                <p class="mb-1">🏠 아파트 이사 (전세)</p>
+                                <p class="text-blue-600 font-black text-sm">대출 10~20억 예상</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Simulation Result Display -->
+            <div class="mt-8 max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- 1. Current Total -->
+                <div class="bg-slate-100 rounded-2xl p-6 text-center border border-slate-200">
+                    <h3 class="text-slate-500 text-xs font-bold uppercase tracking-widest mb-2">현재 총 월세 수익<br>(Current
+                        Total Rent)</h3>
+                    <div class="text-2xl md:text-3xl font-black text-slate-700 tracking-tighter"
+                        id="build-sit-current-total">0원</div>
+                </div>
+
+                <!-- 2. Projected Profit -->
+                <div
+                    class="bg-indigo-900 rounded-2xl p-6 text-white text-center shadow-lg transform transition-all hover:scale-[1.01] border border-indigo-700">
+                    <h3 class="text-indigo-200 text-xs font-bold uppercase tracking-widest mb-2">예상 월 순수익<br>(Projected
+                        Net Profit)</h3>
+                    <div class="text-3xl md:text-4xl font-black tracking-tighter" id="build-sit-profit">0원</div>
+                </div>
+
+                <!-- 3. Difference -->
+                <div class="bg-emerald-50 rounded-2xl p-6 text-center border border-emerald-200">
+                    <h3 class="text-emerald-600 text-xs font-bold uppercase tracking-widest mb-2">수익 차액<br>(Difference)
+                    </h3>
+                    <div class="text-2xl md:text-3xl font-black text-emerald-600 tracking-tighter" id="build-sit-diff">
+                        +0원</div>
+                </div>
+            </div>
+
+            <p class="text-center text-slate-400 text-xs mt-6">
+                * Enter your current monthly rent for each floor in the "Current" diagram to see the comparison.<br>
+                * "Projected Net Profit" is based on the active Simulation settings.
+            </p>
+            </div>
+        </section>
+
+        <!-- TAB 4: GB SIMULATOR -->
+        <section id="gbsim" class="tab-content gb-sim-font space-y-8">
+            <!-- GB Simulator Header Area -->
+            <div class="max-w-7xl mx-auto mb-10">
+                <div class="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-6">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span
+                                class="px-2 py-0.5 bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest rounded-full">Final</span>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Asset
+                                Management</span>
+                        </div>
+                        <h1 class="text-3xl md:text-4xl font-black text-slate-900 tracking-tighter leading-tight mb-3">
+                            Gold Building<br><span
+                                class="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-500">Financial
+                                Simulation</span>
+                        </h1>
+                        <p class="text-slate-500 text-sm font-medium max-w-lg leading-relaxed">
+                            투자비 견적부터 세후 순수익까지, 모든 변수를 고려한 분석.
+                            <span class="text-orange-600 font-bold ml-2">(현재 운영 객실 수: <span
+                                    id="header-total-rooms">0</span>실)</span>
+                        </p>
+                    </div>
+
+                    <!-- Global Controls & Status -->
+                    <div class="flex flex-col gap-3 w-full xl:w-auto">
+                        <!-- Status Bar -->
+                        <div class="flex gap-4 bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+                            <div>
+                                <p class="text-[9px] text-slate-400 font-bold uppercase mb-0.5">Avg Occupancy</p>
+                                <p class="text-lg font-black text-slate-800"><span id="header-avg-occ"
+                                        class="text-orange-600">0</span>%</p>
+                            </div>
+                            <div class="w-px bg-slate-100"></div>
+                            <div>
+                                <p class="text-[9px] text-slate-400 font-bold uppercase mb-0.5">Current Profit</p>
+                                <p class="text-lg font-black text-slate-800" id="current-profit-header">0원</p>
+                            </div>
+                        </div>
+
+                        <!-- Scenario Buttons -->
+                        <div class="flex flex-wrap items-center gap-2">
+                            <div class="header-input-wrapper w-full md:w-48" title="목표 수익 입력 후 엔터">
+                                <span class="header-input-label">Target Profit</span>
+                                <input type="text" id="target-profit-inline" class="header-input" placeholder="0"
+                                    onkeydown="if(event.key==='Enter') runTargetProfitScenario(this.value)"
+                                    oninput="formatTargetInput(this)">
+                                <span
+                                    class="text-[10px] font-bold text-slate-400 absolute bottom-2 right-2 pointer-events-none">원</span>
+                            </div>
+                            <button onclick="runZeroPointScenario('loss')"
+                                class="btn-scenario px-3 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-[11px] hover:bg-red-50 hover:text-red-600 transition">🔴
+                                적자 진입</button>
+                            <button onclick="runZeroPointScenario('zero')"
+                                class="btn-scenario px-3 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-[11px] hover:bg-slate-100 transition">⚪
+                                손익분기</button>
+                            <button onclick="runZeroPointScenario('profit')"
+                                class="btn-scenario px-3 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-[11px] hover:bg-green-50 hover:text-green-600 transition">🟢
+                                흑자 전환</button>
+                            <button onclick="runRandom()"
+                                class="btn-scenario btn-random px-4 py-2 rounded-lg text-[11px] shadow-md">🎲
+                                랜덤</button>
+                            <!-- Scenario Manager -->
+                            <div class="h-6 w-px bg-slate-200 mx-1"></div>
+                            <div class="flex bg-slate-100 p-1 rounded-lg gap-1">
+                                <button onclick="loadScenario(1)"
+                                    class="px-2 py-1 rounded text-[10px] font-bold text-slate-500 hover:bg-white hover:text-indigo-600 hover:shadow-sm transition"
+                                    id="btn-sc-1">1</button>
+                                <button onclick="loadScenario(2)"
+                                    class="px-2 py-1 rounded text-[10px] font-bold text-slate-500 hover:bg-white hover:text-indigo-600 hover:shadow-sm transition"
+                                    id="btn-sc-2">2</button>
+                                <button onclick="loadScenario(3)"
+                                    class="px-2 py-1 rounded text-[10px] font-bold text-slate-500 hover:bg-white hover:text-indigo-600 hover:shadow-sm transition"
+                                    id="btn-sc-3">3</button>
+                            </div>
+                            <button onclick="saveCurrentScenario()" title="현재 상태를 선택된 슬롯에 저장"
+                                class="btn-scenario px-3 py-2 bg-indigo-50 border border-indigo-100 text-indigo-600 rounded-lg text-[11px] hover:bg-indigo-100 transition font-bold">
+                                💾 저장
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+                <!-- Left Column: Inputs -->
+                <div class="lg:col-span-7 space-y-8">
+
+                    <!-- 1. CAPEX -->
+                    <div class="config-card">
+                        <div class="flex justify-between items-start mb-6">
+                            <div>
+                                <div class="flex items-center gap-3 mb-1">
+                                    <label class="text-xs font-bold text-slate-700">투자 원금 설정 (CAPEX)</label>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" id="capex-mode" class="sr-only peer"
+                                            onchange="toggleCapexMode()">
+                                        <div
+                                            class="w-8 h-4 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-orange-500 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all">
+                                        </div>
+                                        <span class="ml-2 text-[10px] font-medium text-slate-400">상세 견적</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="text-right flex items-baseline gap-1">
+                                <input type="text" id="loan-input-num" class="typing-input !text-lg w-32 md:!w-44"
+                                    value="350,000,000" oninput="handleTyping('loan', this.value)">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase">원</span>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <input type="range" id="loan-input" min="0" max="1000000000" step="5000000"
+                                value="350000000" oninput="syncInput('loan', this.value)" class="gb-slider">
+                        </div>
+
+                        <div id="capex-detail" class="hidden animate-fade-in border-t border-slate-100 pt-4 mt-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+                                <div>
+                                    <div class="flex justify-between mb-1"><span
+                                            class="text-[10px] font-bold text-slate-500 uppercase">평당 공사비</span><span
+                                            class="text-sm font-bold" id="const-cost-display">250만원</span></div>
+                                    <input type="range" id="const-cost-input" min="1000000" max="5000000" step="100000"
+                                        value="2500000" oninput="calculateCapex()" class="gb-slider">
+                                </div>
+                                <div>
+                                    <span class="text-[10px] font-bold text-slate-500 mb-1 block uppercase">가구 등급</span>
+                                    <div class="grid grid-cols-3 gap-1">
+                                        <button onclick="setFurnitureGrade('low')"
+                                            class="btn-toggle py-1 rounded text-[10px]" id="furn-low">실속</button>
+                                        <button onclick="setFurnitureGrade('mid')"
+                                            class="btn-toggle active py-1 rounded text-[10px]" id="furn-mid">표준</button>
+                                        <button onclick="setFurnitureGrade('high')"
+                                            class="btn-toggle py-1 rounded text-[10px]" id="furn-high">고급</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div
+                                class="bg-blue-50 p-3 rounded-lg border border-blue-100 flex justify-between items-center text-[11px]">
+                                <span class="text-blue-700">계산 견적 (80% 대출): <strong id="calc-loan-amt"
+                                        class="ml-1 text-blue-900">0원</strong></span>
+                                <button onclick="applyCalculatedLoan()"
+                                    class="bg-blue-600 text-white px-2 py-1 rounded-md font-bold text-[10px]">적용</button>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <!-- 2. Floor Strategy -->
+                    <div class="space-y-3">
+                        <!-- F2 -->
+
+                        <div class="config-card !p-4" id="card-f2">
+                            <div class="flex justify-between items-center mb-4">
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" id="toggle-f2"
+                                        class="w-4 h-4 accent-orange-600 rounded cursor-pointer" checked
+                                        onchange="toggleFloor('f2')">
+                                    <span class="font-bold text-slate-800 text-sm">2층 (38평) 운영</span>
+                                </div>
+                                <div class="flex bg-slate-100 p-0.5 rounded-lg">
+                                    <button onclick="updateRooms('f2', 1)"
+                                        class="btn-toggle px-2 py-1 rounded-md text-[10px]" id="f2-r1">독채</button>
+                                    <button onclick="updateRooms('f2', 2)"
+                                        class="btn-toggle px-2 py-1 rounded-md text-[10px]" id="f2-r2">2실</button>
+                                    <button onclick="updateRooms('f2', 3)"
+                                        class="btn-toggle active px-2 py-1 rounded-md text-[10px]"
+                                        id="f2-r3">3실</button>
+                                    <button onclick="updateRooms('f2', 4)"
+                                        class="btn-toggle px-2 py-1 rounded-md text-[10px]" id="f2-r4">4실</button>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div>
+                                    <div class="flex justify-between items-baseline mb-1">
+                                        <span class="text-[10px] font-bold text-slate-400 uppercase">1박 요금</span>
+                                        <div class="flex items-baseline gap-1">
+                                            <input type="text" id="f2-adr-num" class="typing-input w-24 md:!w-32"
+                                                oninput="handleTyping('f2-adr', this.value)">
+                                            <span class="text-[10px] font-bold text-slate-400">원</span>
+                                        </div>
+                                    </div>
+                                    <input type="range" id="f2-adr-range" min="0" max="1000000" step="5000"
+                                        oninput="syncInput('f2-adr', this.value)" class="gb-slider">
+                                </div>
+                                <div>
+                                    <div class="flex justify-between items-baseline mb-1">
+                                        <span class="text-[10px] font-bold text-slate-400 uppercase">가동률</span>
+                                        <div class="flex items-baseline gap-1">
+                                            <input type="number" id="f2-occ-num" class="typing-input !w-16"
+                                                oninput="handleTyping('f2-occ', this.value)">
+                                            <span class="text-[10px] font-bold text-orange-500">%</span>
+                                        </div>
+                                    </div>
+                                    <input type="range" id="f2-occ-range" min="0" max="100" step="0.01"
+                                        oninput="syncInput('f2-occ', this.value)" class="gb-slider">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- F3 -->
+                        <div class="config-card !p-4" id="card-f3">
+                            <div class="flex justify-between items-center mb-4">
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" id="toggle-f3"
+                                        class="w-4 h-4 accent-orange-600 rounded cursor-pointer" checked
+                                        onchange="toggleFloor('f3')">
+                                    <span class="font-bold text-slate-800 text-sm">3층 (38평) 운영</span>
+                                </div>
+                                <div class="flex bg-slate-100 p-0.5 rounded-lg">
+                                    <button onclick="updateRooms('f3', 1)"
+                                        class="btn-toggle px-2 py-1 rounded-md text-[10px]" id="f3-r1">독채</button>
+                                    <button onclick="updateRooms('f3', 2)"
+                                        class="btn-toggle px-2 py-1 rounded-md text-[10px]" id="f3-r2">2실</button>
+                                    <button onclick="updateRooms('f3', 3)"
+                                        class="btn-toggle active px-2 py-1 rounded-md text-[10px]"
+                                        id="f3-r3">3실</button>
+                                    <button onclick="updateRooms('f3', 4)"
+                                        class="btn-toggle px-2 py-1 rounded-md text-[10px]" id="f3-r4">4실</button>
+                                </div>
+                            </div>
+
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div>
+                                    <div class="flex justify-between items-baseline mb-1">
+                                        <span class="text-[10px] font-bold text-slate-400 uppercase">1박 요금</span>
+                                        <div class="flex items-baseline gap-1">
+                                            <input type="text" id="f3-adr-num" class="typing-input w-24 md:!w-32"
+                                                oninput="handleTyping('f3-adr', this.value)">
+                                            <span class="text-[10px] font-bold text-slate-400">원</span>
+                                        </div>
+                                    </div>
+                                    <input type="range" id="f3-adr-range" min="0" max="1000000" step="5000"
+                                        oninput="syncInput('f3-adr', this.value)" class="gb-slider">
+                                </div>
+                                <div>
+                                    <div class="flex justify-between items-baseline mb-1">
+                                        <span class="text-[10px] font-bold text-slate-400 uppercase">가동률</span>
+                                        <div class="flex items-baseline gap-1">
+                                            <input type="number" id="f3-occ-num" class="typing-input !w-16"
+                                                oninput="handleTyping('f3-occ', this.value)">
+                                            <span class="text-[10px] font-bold text-orange-500">%</span>
+                                        </div>
+                                    </div>
+                                    <input type="range" id="f3-occ-range" min="0" max="100" step="0.01"
+                                        oninput="syncInput('f3-occ', this.value)" class="gb-slider">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- F4 -->
+                        <div class="config-card !p-4" id="card-f4">
+                            <div class="flex justify-between items-center mb-4 text-slate-800">
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" id="toggle-f4" class="w-4 h-4 accent-orange-600 rounded"
+                                        checked onchange="toggleFloor('f4')">
+                                    <span class="font-bold text-sm">4층 (테라스 룸) 운영</span>
+                                </div>
+                                <div class="flex bg-slate-100 p-0.5 rounded-lg">
+                                    <button onclick="updateRooms('f4', 1)"
+                                        class="btn-toggle active px-2 py-1 rounded-md text-[10px]"
+                                        id="f4-r1">독채</button>
+                                    <button onclick="updateRooms('f4', 2)"
+                                        class="btn-toggle px-2 py-1 rounded-md text-[10px]" id="f4-r2">2실</button>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div>
+                                    <div class="flex justify-between items-baseline mb-1">
+                                        <span class="text-[10px] font-bold text-slate-400 uppercase">1박 요금</span>
+                                        <div class="flex items-baseline gap-1">
+                                            <input type="text" id="f4-adr-num" class="typing-input w-24 md:!w-32"
+                                                oninput="handleTyping('f4-adr', this.value)">
+                                            <span class="text-[10px] font-bold text-slate-400">원</span>
+                                        </div>
+                                    </div>
+                                    <input type="range" id="f4-adr-range" min="0" max="1500000" step="5000"
+                                        oninput="syncInput('f4-adr', this.value)" class="gb-slider">
+                                </div>
+                                <div>
+                                    <div class="flex justify-between items-baseline mb-1">
+                                        <span class="text-[10px] font-bold text-slate-400 uppercase">가동률</span>
+                                        <div class="flex items-baseline gap-1">
+                                            <input type="number" id="f4-occ-num" class="typing-input !w-16"
+                                                oninput="handleTyping('f4-occ', this.value)">
+                                            <span class="text-[10px] font-bold text-orange-500">%</span>
+                                        </div>
+                                    </div>
+                                    <input type="range" id="f4-occ-range" min="0" max="100" step="0.01"
+                                        oninput="syncInput('f4-occ', this.value)" class="gb-slider">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. Expenses & Finance -->
+                    <div id="section-tax-finance" class="config-card space-y-6">
+                        <div class="flex justify-between items-center border-b border-slate-100 pb-2 mb-2">
+                            <span class="text-base font-bold">3. 운영 비용 및 금융</span>
+                            <span
+                                class="text-[9px] font-bold bg-slate-100 px-2 py-1 rounded text-slate-500 uppercase">Cost
+                                & Finance</span>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pb-6 border-b border-slate-100">
+                            <div>
+                                <div class="flex justify-between items-baseline mb-1">
+                                    <span class="text-[10px] font-bold text-slate-500 block uppercase">월 고정 비용</span>
+                                    <div class="flex items-baseline gap-1">
+                                        <input type="text" id="fixed-cost-num" class="typing-input w-28 md:!w-32"
+                                            oninput="handleTyping('fixed', this.value)">
+                                        <span class="text-[10px] font-bold text-slate-400">원</span>
+                                    </div>
+                                </div>
+                                <input type="range" id="fixed-cost-range" min="0" max="10000000" step="100000"
+                                    class="mt-2 gb-slider" oninput="syncInput('fixed', this.value)">
+                            </div>
+                            <div>
+                                <div class="flex justify-between items-baseline mb-1">
+                                    <span class="text-[10px] font-bold text-purple-600 block uppercase">1박당 변동비</span>
+                                    <div class="flex items-baseline gap-1">
+                                        <input type="text" id="var-cost-num"
+                                            class="typing-input !text-purple-600 !border-purple-200 !w-24"
+                                            oninput="handleTyping('var', this.value)">
+                                        <span class="text-[10px] font-bold text-purple-400">원</span>
+                                    </div>
+                                </div>
+                                <input type="range" id="var-cost-range" min="0" max="100000" step="1000"
+                                    class="mt-2 accent-purple-500 gb-slider" oninput="syncInput('var', this.value)">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-500 mb-2 block uppercase">금융 상품</label>
+                                <div onclick="selectBank('policy', 2.25)" id="bank-policy"
+                                    class="loan-option active p-3 flex justify-between items-center mb-2">
+                                    <span class="font-bold text-xs">관광진흥개발기금</span>
+                                    <span class="font-black text-sm text-orange-600">2.25%</span>
+                                </div>
+                                <div class="bank-select-grid">
+                                    <button onclick="selectBank('shinhan', 4.15)" id="bank-shinhan"
+                                        class="bank-btn"><span
+                                            class="block text-[8px] text-slate-400">신한</span>4.15%</button>
+                                    <button onclick="selectBank('hana', 3.98)" id="bank-hana" class="bank-btn"><span
+                                            class="block text-[8px] text-slate-400">하나</span>3.98%</button>
+                                    <button onclick="selectBank('kb', 4.25)" id="bank-kb" class="bank-btn"><span
+                                            class="block text-[8px] text-slate-400">국민</span>4.25%</button>
+                                    <button onclick="selectBank('custom', 4.0)" id="bank-custom" class="bank-btn">
+                                        <input type="text" id="custom-rate-input"
+                                            class="w-6 border-b border-orange-300 text-center outline-none bg-transparent"
+                                            value="4.0" oninput="updateCustomRate(this.value)">%
+                                    </button>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between items-center mb-2">
+                                    <label class="text-[10px] font-bold text-slate-500 uppercase">소득세율</label>
+                                    <span class="text-xs font-black text-slate-700" id="tax-rate-disp">15%</span>
+                                </div>
+                                <input type="range" id="tax-rate-range" min="6" max="45" step="1" value="15"
+                                    oninput="updateTaxRate(this.value)" class="gb-slider">
+                                <div class="flex items-center gap-2 mt-4">
+                                    <input type="checkbox" id="vat-toggle" class="w-4 h-4 accent-orange-600 rounded"
+                                        checked onchange="calculate()">
+                                    <label class="text-[10px] font-bold text-slate-500 uppercase">부가세 (10%) 포함</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Results Dashboard -->
+                <div class="lg:col-span-5">
+                    <div class="result-card shadow-2xl">
+                        <div class="mb-10 text-center lg:text-left">
+                            <p class="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] mb-2">Monthly Net
+                                Cashflow (After Tax)</p>
+                            <div class="text-3xl md:text-4xl lg:text-6xl font-black text-white tracking-tighter"
+                                id="res-net-profit">0원</div>
+                            <div id="profit-tag"
+                                class="mt-4 inline-block px-4 py-1 rounded-full text-[9px] font-black tracking-widest bg-slate-700 text-slate-300 uppercase">
+                                Analysis Ready</div>
+                        </div>
+
+                        <!-- 3 Miniature Calendars (Unified Display) -->
+                        <div class="mb-8 flex flex-col gap-4">
+                            <p class="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Floor Availability
+                                Simulation (30 Days)</p>
+                            <div class="flex gap-2">
+                                <div class="mini-cal-box">
+                                    <div class="mini-cal-title"><span>2F</span> <span id="occ-f2-disp">0%</span></div>
+                                    <div class="calendar-grid" id="calendar-grid-f2"></div>
+                                </div>
+                                <div class="mini-cal-box">
+                                    <div class="mini-cal-title"><span>3F</span> <span id="occ-f3-disp">0%</span></div>
+                                    <div class="calendar-grid" id="calendar-grid-f3"></div>
+                                </div>
+                                <div class="mini-cal-box">
+                                    <div class="mini-cal-title"><span>4F</span> <span id="occ-f4-disp">0%</span></div>
+                                    <div class="calendar-grid" id="calendar-grid-f4"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4 text-sm mb-8 border-b border-white/10 pb-8 font-medium">
+                            <div class="flex justify-between items-center text-slate-200"><span>총 매출 (Gross)</span><span
+                                    class="text-xl text-white font-black" id="res-gross">0원</span></div>
+                            <div class="flex justify-between text-xs text-slate-400 pl-2"><span>플랫폼 수수료 +
+                                    부가세</span><span class="text-red-300" id="res-fee-vat">-0원</span></div>
+                            <div class="flex justify-between items-center text-slate-200 pt-1"><span>총 운영비
+                                    (OPEX)</span><span class="text-red-300 font-bold" id="res-opex">-0원</span></div>
+                            <div class="flex justify-between items-center text-slate-200 pt-1"><span>영업 이익
+                                    (EBITDA)</span><span class="text-xl text-white font-black" id="res-ebitda">0원</span>
+                            </div>
+                            <div class="flex justify-between items-center text-slate-300 text-xs"><span>금융 이자 +
+                                    소득세</span><span class="text-red-300 font-bold" id="res-tax-int">-0원</span></div>
+                        </div>
+
+                        <div class="mb-8">
+                            <div class="math-box space-y-1" id="math-formula"></div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4 text-center">
+                            <div class="bg-white/5 p-4 rounded-2xl border border-white/10">
+                                <p class="text-[8px] text-slate-500 font-black uppercase mb-1 tracking-widest">Rent
+                                    Delta</p>
+                                <p class="text-2xl font-black text-green-400" id="res-delta">0%</p>
+                            </div>
+                            <div class="bg-white/5 p-4 rounded-2xl border border-white/10">
+                                <p class="text-[8px] text-slate-500 font-black uppercase mb-1 tracking-widest">Payback
+                                </p>
+                                <p class="text-2xl font-black text-orange-400" id="res-payback">0개월</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- TAB 6: FINANCIAL STATEMENT -->
+        <section id="financial" class="tab-content hidden space-y-10">
+            <div class="bg-white p-8 md:p-12 rounded-3xl shadow-sm border border-slate-200 mt-12">
+                <div class="flex justify-between items-center mb-8">
+                    <h2 class="text-3xl font-black text-slate-900 leading-tight">Financial Analysis Report</h2>
+                    <span id="sim-status-badge"
+                        class="px-3 py-1 bg-green-100 text-green-700 font-bold rounded-full text-xs uppercase tracking-wider">
+                        Waiting for Sync...
+                    </span>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                    <!-- Professional GAAP Income Statement -->
+                    <div class="col-span-1 lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200">
+                        <div class="flex justify-between items-end mb-6">
+                            <h3 class="text-xl font-bold text-slate-900 flex items-center gap-2">
+                                <span class="w-2 h-8 bg-indigo-500 rounded-sm"></span>
+                                포괄손익계산서 (Statement of Comprehensive Income)
+                            </h3>
+                            <span class="text-[10px] text-slate-400 font-medium">Unit: KRW (Won)</span>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-right">
+                                <thead>
+                                    <tr class="bg-slate-900 text-white border-b-2 border-indigo-500">
+                                        <th class="py-3 px-4 text-left font-bold uppercase text-xs w-1/3">Account (계정과목)
+                                        </th>
+                                        <th class="py-3 px-4 font-bold uppercase text-xs w-1/3 text-orange-400">Monthly
+                                            (Sim)</th>
+                                        <th class="py-3 px-4 font-bold uppercase text-xs w-1/3">Year 1 (2025)</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                                    <!-- Revenue Section -->
+                                    <tr class="hover:bg-slate-50">
+                                        <td class="py-3 px-4 text-left font-black text-slate-800">Total Revenue (매출액)
+                                        </td>
+                                        <td class="py-3 px-4 font-black text-orange-400" id="is-rev-m">0</td>
+                                        <td class="py-3 px-4 font-black text-slate-900" id="is-rev-y1">0</td>
+                                    </tr>
+                                    <tr class="hover:bg-slate-50">
+                                        <td class="py-2 px-4 text-left text-slate-500 text-xs pl-8">(-) Cost of Goods
+                                            Sold (매출원가)</td>
+                                        <td class="py-2 px-4 text-orange-400" id="is-cogs-m">0</td>
+                                        <td class="py-2 px-4 text-red-500" id="is-cogs-y1">0</td>
+                                    </tr>
+
+                                    <!-- Gross Profit -->
+                                    <tr class="bg-indigo-50/30 font-bold border-t border-slate-200">
+                                        <td class="py-3 px-4 text-left text-indigo-900">Gross Profit (매출총이익)</td>
+                                        <td class="py-3 px-4 text-indigo-600" id="is-gp-m">0</td>
+                                        <td class="py-3 px-4 text-indigo-900" id="is-gp-y1">0</td>
+                                    </tr>
+
+                                    <!-- SG&A Section -->
+                                    <tr class="hover:bg-slate-50">
+                                        <td class="py-2 px-4 text-left text-slate-500 text-xs pl-8 pt-4">Selling,
+                                            General, & Admin (판관비)</td>
+                                        <td class="py-2 px-4 text-orange-400 pt-4" id="is-sga-total-m">0</td>
+                                        <td class="py-2 px-4 text-red-500 pt-4" id="is-sga-total-y1">0</td>
+                                    </tr>
+                                    <tr class="hover:bg-slate-50 text-[10px] text-slate-400">
+                                        <td class="py-1 px-4 text-left pl-12">Of which: Platform Fees</td>
+                                        <td class="py-1 px-4" id="is-sga-fee-m">0</td>
+                                        <td class="py-1 px-4" id="is-sga-fee-y1">0</td>
+                                    </tr>
+                                    <tr class="hover:bg-slate-50 text-[10px] text-slate-400">
+                                        <td class="py-1 px-4 text-left pl-12 border-b border-slate-100 pb-2">Of which:
+                                            Utilities & Admin</td>
+                                        <td class="py-1 px-4 border-b border-slate-100 pb-2" id="is-sga-fix-m">0</td>
+                                        <td class="py-1 px-4 border-b border-slate-100 pb-2" id="is-sga-fix-y1">0</td>
+                                    </tr>
+
+                                    <!-- Operating Income -->
+                                    <tr class="bg-indigo-50 text-indigo-900">
+                                        <td class="py-3 px-4 text-left font-black">Operating Income (영업이익/EBITDA)</td>
+                                        <td class="py-3 px-4 font-black text-lg text-indigo-600" id="is-op-m">0</td>
+                                        <td class="py-3 px-4 font-black text-lg" id="is-op-y1">0</td>
+                                    </tr>
+
+                                    <!-- Dep & Init -->
+                                    <tr class="hover:bg-slate-50">
+                                        <td class="py-2 px-4 text-left text-slate-500 text-xs pl-8">(-) Depreciation
+                                            (감가상각비)</td>
+                                        <td class="py-2 px-4 text-slate-500" id="is-dep-m">0</td>
+                                        <td class="py-2 px-4 text-slate-500" id="is-dep-y1">0</td>
+                                    </tr>
+                                    <tr class="hover:bg-slate-50">
+                                        <td class="py-2 px-4 text-left text-slate-500 text-xs pl-8">(-) Interest Expense
+                                            (이자비용)</td>
+                                        <td class="py-2 px-4 text-orange-400" id="is-int-m">0</td>
+                                        <td class="py-2 px-4 text-red-500" id="is-int-y1">0</td>
+                                    </tr>
+
+                                    <!-- Pretax -->
+                                    <tr class="font-bold text-slate-700 bg-slate-50/50">
+                                        <td class="py-2 px-4 text-left">Pretax Income (세전이익)</td>
+                                        <td class="py-2 px-4" id="is-ebt-m">0</td>
+                                        <td class="py-2 px-4" id="is-ebt-y1">0</td>
+                                    </tr>
+                                    <tr class="hover:bg-slate-50">
+                                        <td class="py-2 px-4 text-left text-slate-500 text-xs pl-8">(-) Income Tax (법인세
+                                            등)</td>
+                                        <td class="py-2 px-4 text-orange-400" id="is-tax-m">0</td>
+                                        <td class="py-2 px-4 text-red-500" id="is-tax-y1">0</td>
+                                    </tr>
+
+                                    <!-- Net Income -->
+                                    <tr class="bg-yellow-100 text-yellow-900 border-t-2 border-yellow-400">
+                                        <td class="py-4 px-4 text-left font-black text-sm">Net Income (Accounting) *Diff
+                                            due to Dep.</td>
+                                        <td class="py-4 px-4 font-black text-xl text-yellow-700" id="is-ni-m">0</td>
+                                        <td class="py-4 px-4 font-black text-xl" id="is-ni-y1">0</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Cash Flow & Investment Metrics -->
+                    <div class="space-y-8">
+
+                        <!-- Cash Flow Statement -->
+                        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                            <h3 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                                <span class="w-2 h-6 bg-green-500 rounded-sm"></span>
+                                현금흐름표 (Cash Flow Statement)
+                            </h3>
+                            <table class="w-full text-xs">
+                                <tbody class="divide-y divide-slate-100">
+                                    <tr>
+                                        <td class="py-2 font-bold text-slate-700">영업활동 현금흐름 (Operating CF)</td>
+                                        <td class="py-2 text-right font-bold text-green-600" id="fs-cf-operating">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="py-1 pl-4 text-slate-500">당기순이익</td>
+                                        <td class="py-1 text-right text-slate-500" id="fs-cf-ni">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="py-1 pl-4 text-slate-500">+ 감가상각비 (현금유출 없음)</td>
+                                        <td class="py-1 text-right text-slate-500" id="fs-cf-dep">0</td>
+                                    </tr>
+                                    <tr class="border-t border-slate-100">
+                                        <td class="py-2 font-bold text-slate-700">투자활동 현금흐름 (Investing CF)</td>
+                                        <td class="py-2 text-right font-bold text-red-500" id="fs-cf-investing">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="py-1 pl-4 text-slate-500">초기 시설투자 (CAPEX)</td>
+                                        <td class="py-1 text-right text-slate-500" id="fs-cf-capex">0</td>
+                                    </tr>
+                                    <tr class="border-t border-slate-100">
+                                        <td class="py-2 font-bold text-slate-700">재무활동 현금흐름 (Financing CF)</td>
+                                        <td class="py-2 text-right font-bold text-indigo-500" id="fs-cf-financing">0
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="py-1 pl-4 text-slate-500">장기차입금 증가</td>
+                                        <td class="py-1 text-right text-slate-500" id="fs-cf-loan">0</td>
+                                    </tr>
+                                    <tr class="bg-slate-50 border-t-2 border-slate-200">
+                                        <td class="py-3 font-black text-slate-900">기말 현금 잔액 (Net Cash Change)</td>
+                                        <td class="py-3 text-right font-black text-slate-900" id="fs-cf-net">0</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <p class="text-[10px] text-slate-400 mt-2 text-right">* Year 0 (초기 투자 시점) 기준 현금흐름 요약입니다.</p>
+                        </div>
+
+                        <!-- Investment Analysis -->
+                        <div class="bg-slate-900 p-6 rounded-2xl text-white shadow-lg">
+                            <h3 class="text-lg font-bold mb-6 flex items-center gap-2">
+                                <span class="w-2 h-6 bg-orange-500 rounded-sm"></span>
+                                투자 지표 분석 (Investment Analysis)
+                            </h3>
+                            <div class="grid grid-cols-2 gap-6">
+                                <div>
+                                    <p class="text-[10px] text-slate-400 uppercase tracking-wider mb-1">Cap Rate (자본환원율)
+                                    </p>
+                                    <p class="text-3xl font-black text-orange-400" id="fs-metric-cap">0.0%</p>
+                                    <p class="text-[9px] text-slate-500 mt-1">NOI / Total Investment</p>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] text-slate-400 uppercase tracking-wider mb-1">ROE (자기자본이익률)
+                                    </p>
+                                    <p class="text-3xl font-black text-green-400" id="fs-metric-roe">0.0%</p>
+                                    <p class="text-[9px] text-slate-500 mt-1">Net Income / Equity</p>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] text-slate-400 uppercase tracking-wider mb-1">DSCR (부채상환비율)
+                                    </p>
+                                    <p class="text-3xl font-black text-blue-400" id="fs-metric-dscr">0.00x</p>
+                                    <p class="text-[9px] text-slate-500 mt-1">NOI / Debt Service</p>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] text-slate-400 uppercase tracking-wider mb-1">Cash on Cash</p>
+                                    <p class="text-3xl font-black text-purple-400" id="fs-metric-coc">0.0%</p>
+                                    <p class="text-[9px] text-slate-500 mt-1">Pre-Tax CF / Equity</p>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="py-12 text-center text-slate-400 text-xs border-t bg-white mt-10">
+        <p>© 2024 Mapo-Hongdae Biz Research Group. For Simulation Purposes Only.</p>
+    </footer>
+
+    <script>
+        // Data Basis
+        const priceDataSets = [
+            [85000, 150000, 130000, 240000], // Weekday
+            [135000, 225000, 195000, 360000] // Weekend
+        ];
+        const labels = ['에어비앤비(원룸)', '에어비앤비(독채)', '3성급 호텔', '4성급 호텔'];
+        const trendValues = [65, 72, 60, 65, 78, 72, 88, 92, 74, 85, 70, 95];
+
+        // GB Simulator State
+        let state = {
+            b1: { active: false, rooms: 0, visualMode: 'office', currentRent: 0 },
+            f1: { active: false, rooms: 0, visualMode: 'rent', currentRent: 0 },
+            f2: { active: true, rooms: 3, adr: 300000, occ: 70, currentRent: 5000000, visualMode: 'airbnb' },
+            f3: { active: true, rooms: 3, adr: 250000, occ: 75, currentRent: 0, visualMode: 'airbnb' },
+            f4: { active: true, rooms: 1, adr: 450000, occ: 85, currentRent: 0, visualMode: 'airbnb' },
+            capex: { mode: 'simple', simpleAmt: 350000000, pyCost: 2500000, furnGrade: 'mid' },
+            global: { fixedCost: 4000000, varCostPerNight: 15000, loanType: 'policy', activeInterestRate: 2.25, feeRate: 0.15, rentBase: 15000000, days: 30.41, taxRate: 15, vat: true },
+            ui: { activeCalTab: 'f2' }
+        };
+        const BUILDING_AREA = 96;
+
+        let pChart, tChart, dChart, bChart;
+
+        window.onload = () => {
+            initCharts();
+            run();
+
+            // Try Auto-Save Load
+            if (loadAutoSave()) {
+                console.log("Restored from AutoSave");
+                syncAllInputs();
+            }
+            updateSlotUI();
+
+            // GB Simulator Init
+            calculate();
+
+            // Initialize defaults ONLY if not loaded from autosave (checking simple property)
+            if (!state.capex.simpleAmt) {
+                syncInput('loan', 350000000);
+                syncInput('fixed', 4000000);
+                syncInput('var', 15000);
+            }
+            // Always ensure UI sync for critical inputs
+            syncInput('loan', state.capex.simpleAmt);
+            syncInput('fixed', state.global.fixedCost);
+            syncInput('var', state.global.varCostPerNight);
+
+            if (state.f2) updateRooms('f2', state.f2.rooms);
+            if (state.f3) updateRooms('f3', state.f3.rooms);
+            if (state.f4) updateRooms('f4', state.f4.rooms);
+
+            // Sync Initial Rent Inputs
+            syncInput('f2-rent', state.f2.currentRent);
+            syncInput('f3-rent', state.f3.currentRent);
+            syncInput('f4-rent', state.f4.currentRent);
+
+            updateBuildingDiagram();
+
+            // Initialize correct view state based on default active tab (Intro)
+            showTab('intro');
+        };
+
+        function showTab(tabId) {
+            // Intro Tab Special Handling: Fullscreen Globe & Transparent Header
+            const globeBg = document.getElementById('globeViz');
+            const mainHeader = document.getElementById('main-header');
+
+            // Handle Intro Content Fade In
+            if (tabId === 'intro') {
+                const c = document.getElementById('intro-overlay-center');
+                if (c) { 
+                    c.style.opacity = '1'; 
+                    c.style.pointerEvents = 'auto'; 
+                    c.classList.remove('translate-y-10', 'opacity-0');
+                }
+            }
+
+            if (tabId === 'intro') {
+                if (globeBg) {
+                    globeBg.classList.remove('opacity-0', 'pointer-events-none');
+                    globeBg.classList.add('opacity-100');
+                    globeBg.style.pointerEvents = 'auto'; // Enable interaction
+                }
+                if (mainHeader) {
+                    mainHeader.classList.remove('bg-indigo-900', 'shadow-xl');
+                    mainHeader.classList.add('bg-transparent', 'shadow-none');
+                }
+            } else {
+                if (globeBg) {
+                    globeBg.classList.remove('opacity-100');
+                    globeBg.classList.add('opacity-0', 'pointer-events-none');
+                    globeBg.style.pointerEvents = 'none'; // Disable interaction when hidden
+                }
+                if (mainHeader) {
+                    mainHeader.classList.remove('bg-transparent', 'shadow-none');
+                    mainHeader.classList.add('bg-indigo-900', 'shadow-xl');
+                }
+            }
+
+            // 버튼 스타일 업데이트
+            ['intro', 'gbsim', 'report', 'visual', 'sim', 'financial', 'building-situation'].forEach(id => {
+                const btn = document.getElementById('b-' + id);
+                if (btn) {
+                    btn.className = (id === tabId)
+                        ? "px-5 py-2 rounded-lg text-sm font-bold bg-white text-indigo-900 shadow-md"
+                        : "px-5 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-indigo-700 transition" + (tabId === 'intro' ? ' text-white hover:bg-white/20' : '');
+                
+                    // Fix button styling for intro mode explicitly if needed, but the transparent header handles most.
+                    // Let's refine the active state for intro mode.
+                    if (tabId === 'intro') {
+                        // In intro mode, buttons should look good on dark bg
+                         if (id === tabId) {
+                             btn.className = "px-5 py-2 rounded-lg text-sm font-bold bg-white text-indigo-900 shadow-md";
+                         } else {
+                             btn.className = "px-5 py-2 rounded-lg text-sm font-medium text-indigo-100 hover:bg-white/10 transition";
+                         }
+                    }
+                }
+            });
+
+            // 모든 탭 섹션 비활성화
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+            const sec = document.getElementById(tabId);
+            if (sec) sec.classList.add('active');
+
+            // GB Simulator UI 업데이트 (탭 전환 시)
+            if (tabId === 'gbsim' || tabId === 'financial') {
+                setTimeout(() => {
+                    if (typeof calculate === 'function') calculate();
+                }, 100);
+            }
+        }
+
+        function switchReportSubTab(subId) {
+            const r1 = document.getElementById('report1-inner');
+            const r2 = document.getElementById('report2-content-section');
+            const rTax = document.getElementById('report-tax-section');
+
+            const btn1 = document.getElementById('btn-sub-r1');
+            const btn2 = document.getElementById('btn-sub-r2');
+            const btnTax = document.getElementById('btn-sub-tax');
+
+            // Reset all
+            if (r1) r1.classList.add('hidden');
+            if (r2) r2.classList.add('hidden');
+            if (rTax) rTax.classList.add('hidden');
+
+            if (btn1) btn1.className = "px-6 py-2 rounded-lg font-bold text-sm text-slate-500 hover:text-slate-800 transition-all";
+            if (btn2) btn2.className = "px-6 py-2 rounded-lg font-bold text-sm text-slate-500 hover:text-slate-800 transition-all";
+            if (btnTax) btnTax.className = "px-6 py-2 rounded-lg font-bold text-sm text-slate-500 hover:text-slate-800 transition-all";
+
+            // Activate Target
+            if (subId === 'r1') {
+                if (r1) r1.classList.remove('hidden');
+                if (btn1) btn1.className = "px-6 py-2 rounded-lg font-bold text-sm bg-white text-indigo-900 shadow-sm transition-all";
+            } else if (subId === 'r2') {
+                if (r2) r2.classList.remove('hidden');
+                if (btn2) btn2.className = "px-6 py-2 rounded-lg font-bold text-sm bg-white text-indigo-900 shadow-sm transition-all";
+            } else if (subId === 'tax') {
+                if (rTax) rTax.classList.remove('hidden');
+                if (btnTax) btnTax.className = "px-6 py-2 rounded-lg font-bold text-sm bg-white text-indigo-900 shadow-sm transition-all";
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function saveSimulation() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "gold_sim_config_" + new Date().toISOString().slice(0, 10).replace(/-/g, "") + ".json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        }
+
+        function triggerLoad() { document.getElementById('load-file-input').click(); }
+
+        function loadSimulation(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    const loaded = JSON.parse(e.target.result);
+                    // Validate basic structure
+                    if (!loaded.f2 || !loaded.global) throw new Error("Invalid Format");
+                    state = loaded;
+
+                    // Restore UI from State
+                    ['f2', 'f3', 'f4'].forEach(f => {
+                        updateUI(`${f}-adr`);
+                        updateUI(`${f}-occ`);
+                        // Update buttons
+                        document.getElementById(`toggle-${f}`).checked = state[f].active;
+                        // No need to call toggleFloor here, updateBuildingDiagram will handle visual state
+                        // updateRooms will be called by calculateCapex which is called by calculate
+                    });
+
+                    // Restore Global
+                    syncInput('loan', state.capex.simpleAmt); // updates UI + State (redundant but safe)
+                    syncInput('fixed', state.global.fixedCost);
+
+                    // Restore Checkboxes
+                    if (getEl('vat-toggle')) getEl('vat-toggle').checked = state.global.vat;
+                    if (getEl('tax-rate-range')) getEl('tax-rate-range').value = state.global.taxRate;
+                    updateTaxRate(state.global.taxRate);
+
+                    calculate();
+                    alert('✅ 설정을 성공적으로 불러왔습니다!');
+                } catch (err) {
+                    alert('❌ 파일 로드 실패: 올바른 JSON 파일이 아닙니다.\n' + err.message);
+                }
+                input.value = ''; // Reset
+            };
+            reader.readAsText(file);
+        }
+
+        function toggleSplitView() {
+            const sim = document.getElementById('gbsim');
+            const fin = document.getElementById('financial');
+            const mainContent = document.querySelector('main');
+
+            // Check if already in split mode (by checking specific classes/layout) or use a state
+            const isSplit = sim.classList.contains('split-mode-active');
+
+            if (!isSplit) {
+                // Activate Split View
+                sim.classList.remove('hidden', 'active'); // Handled by flex/grid
+                fin.classList.remove('hidden', 'active');
+
+                // Set layout wrapper
+                sim.classList.add('split-mode-active');
+
+                // We need a wrapper to hold them side by side
+                // Since they are top level sections, we might need to manipulate their parent or display properties
+
+                // Let's force them to be visible
+                sim.style.display = 'block';
+                fin.style.display = 'block';
+
+                // Adjust widths for desktop
+                // Assuming they are children of <main> or similar container
+                // Let's scroll to top
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+
+                alert('⚡ Real-Time Split Mode Activated!\nDesktop: Use wide screen to see Side-by-Side.\nMobile: Scroll down to see Financial Statement immediately.');
+            } else {
+                // Deactivate Split View (Return to Tab Mode)
+                sim.classList.remove('split-mode-active');
+                sim.style.display = ''; // Reset
+                fin.style.display = ''; // Reset
+
+                // Reset to default tab (Simulator)
+                showTab('gbsim');
+            }
+        }
+
+        function initCharts() {
+            // Price Bar
+            pChart = new Chart(document.getElementById('priceChart'), {
+                type: 'bar',
+                data: { labels, datasets: [{ data: priceDataSets[0], backgroundColor: '#6366f1', borderRadius: 8 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+            // Trend Line
+            tChart = new Chart(document.getElementById('trendChart'), {
+                type: 'line',
+                data: {
+                    labels: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
+                    datasets: [{ data: trendValues, borderColor: '#6366f1', fill: true, backgroundColor: 'rgba(99,102,241,0.05)', tension: 0.4 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+            // ROI Donut
+            dChart = new Chart(document.getElementById('donutChart'), {
+                type: 'doughnut',
+                data: { labels: ['순수익', '운영비'], datasets: [{ data: [70, 30], backgroundColor: ['#4f46e5', '#f1f5f9'], borderWidth: 0 }] },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '80%', plugins: { legend: { position: 'bottom' } } }
+            });
+            // Accumulation Bar
+            bChart = new Chart(document.getElementById('barChart'), {
+                type: 'bar',
+                data: { labels: ['3개월', '6개월', '9개월', '12개월'], datasets: [{ label: '누적 수익', data: [0, 0, 0, 0], backgroundColor: '#818cf8', borderRadius: 8 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+        }
+
+        function updatePrice(idx) {
+            pChart.data.datasets[0].data = priceDataSets[idx];
+            pChart.update();
+            document.getElementById('pb-0').className = idx === 0 ? "px-4 py-1.5 text-xs font-bold rounded-md bg-white text-indigo-600 shadow-sm" : "px-4 py-1.5 text-xs font-medium text-slate-500";
+            document.getElementById('pb-1').className = idx === 1 ? "px-4 py-1.5 text-xs font-bold rounded-md bg-white text-indigo-600 shadow-sm" : "px-4 py-1.5 text-xs font-medium text-slate-500";
+        }
+
+        function run() {
+            const u = +document.getElementById('units').value;
+            const p = +document.getElementById('price').value;
+            const o = +document.getElementById('occ').value;
+            const s = +document.getElementById('start').value;
+            const c = +document.getElementById('cost').value;
+
+            document.getElementById('v-price').innerText = p.toLocaleString() + '원';
+            document.getElementById('v-occ').innerText = o + '%';
+
+            const rev = Math.floor(u * p * 30 * (o / 100));
+            const prof = rev - c;
+
+            document.getElementById('r-rev').innerText = '₩' + rev.toLocaleString();
+            document.getElementById('r-prof').innerText = '₩' + prof.toLocaleString();
+
+            if (prof > 0) {
+                const months = Math.ceil(s / prof);
+                document.getElementById('r-time').innerText = months + '개월';
+                dChart.data.datasets[0].data = [prof, c];
+                dChart.data.datasets[0].backgroundColor = ['#4f46e5', '#f1f5f9'];
+            } else {
+                document.getElementById('r-time').innerText = '회수 불가';
+                dChart.data.datasets[0].data = [0, 100];
+                dChart.data.datasets[0].backgroundColor = ['#f1f5f9', '#ef4444'];
+            }
+            dChart.update();
+
+            bChart.data.datasets[0].data = [prof * 3, prof * 6, prof * 9, prof * 12];
+            bChart.update();
+
+            // Sync to GB Simulator State & Financial Statement (Auto-Update)
+            if (typeof state !== 'undefined') {
+                ['f2', 'f3', 'f4'].forEach(f => {
+                    state[f].adr = p;
+                    state[f].occ = o;
+                });
+                state.capex.simpleAmt = s;
+                state.global.fixedCost = c;
+
+                // Update GB Sim UI inputs to match
+                if (typeof syncAllInputs === 'function') {
+                    ['f2', 'f3', 'f4'].forEach(f => {
+                        updateUI(`${f}-adr`);
+                        updateUI(`${f}-occ`);
+                    });
+                    updateUI('loan');
+                    updateUI('fixed');
+                }
+
+                // Trigger Detailed Calculation
+                if (typeof calculate === 'function') calculate();
+            }
+        }
+
+        // --- GB Simulator Functions ---
+        const fwc = (n) => Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        const rmc = (s) => s.toString().replace(/,/g, "");
+        const getEl = (id) => document.getElementById(id);
+
+        function getIds(k) {
+            if (k === 'loan') return ['loan-input', 'loan-input-num'];
+            if (k === 'fixed') return ['fixed-cost-range', 'fixed-cost-num'];
+            if (k === 'var') return ['var-cost-range', 'var-cost-num'];
+            return [`${k}-range`, `${k}-num`];
+        }
+
+        function runTargetProfitScenario(val) {
+            const targetNet = parseInt(rmc(val)); if (isNaN(targetNet)) return;
+            const fixed = state.global.fixedCost;
+            let potGross = 0, potNights = 0;
+            ['f2', 'f3', 'f4'].forEach(f => { if (state[f].active) { potGross += state[f].rooms * state.global.days * state[f].adr; potNights += state[f].rooms * state.global.days; } });
+            if (potGross === 0) return;
+            let low = 0, high = 100, finalOCC = 0;
+            for (let i = 0; i < 30; i++) {
+                let mid = (low + high) / 2;
+                let sGross = potGross * (mid / 100), sNights = potNights * (mid / 100);
+                let sVar = sNights * state.global.varCostPerNight, sFee = sGross * state.global.feeRate, sVat = state.global.vat ? (sGross * 0.1) : 0;
+                let sNetRev = sGross - sFee - sVat, sEbitda = sNetRev - (fixed + sVar);
+                let sPreTax = sEbitda - (state.capex.simpleAmt * (state.global.activeInterestRate / 100) / 12);
+                let sTax = sPreTax > 0 ? sPreTax * (state.global.taxRate / 100) : 0;
+                if (sPreTax - sTax < targetNet) low = mid; else high = mid;
+                finalOCC = mid;
+            }
+            finalOCC = Math.round(finalOCC * 100) / 100; if (finalOCC > 100) finalOCC = 100;
+            ['f2', 'f3', 'f4'].forEach(f => { if (state[f].active) state[f].occ = finalOCC; });
+            syncAllInputs(); calculate();
+        }
+
+        function calculate() {
+            const updateText = (id, text) => { const el = getEl(id); if (el) el.innerText = text; };
+
+            state.global.taxRate = parseInt(getEl('tax-rate-range').value);
+            state.global.vat = getEl('vat-toggle').checked;
+            let totalGross = 0, totalNights = 0;
+            ['f2', 'f3', 'f4'].forEach(f => { if (state[f].active) { const n = state[f].rooms * state.global.days * (state[f].occ / 100); totalNights += n; totalGross += n * state[f].adr; } });
+
+            const totalVarCost = totalNights * state.global.varCostPerNight;
+            const fee = totalGross * state.global.feeRate, vat = state.global.vat ? (totalGross * 0.1) : 0;
+            const netRev = totalGross - fee - vat, totalOpex = state.global.fixedCost + totalVarCost, ebitda = netRev - totalOpex;
+            // 1. Calculate Depreciation for Tax Shield
+            const depPerMonth = Math.round(state.capex.simpleAmt / 60);
+
+            // Interest Calculation
+            const interest = (state.capex.simpleAmt * (state.global.activeInterestRate / 100)) / 12;
+
+            // 2. Taxable Income (EBT) Calculation
+            // Taxable Income = EBITDA - Interest - Depreciation
+            // (Note: Depreciation is non-cash but tax-deductible)
+            const preTaxCash = ebitda - interest;
+            const taxableIncome = preTaxCash - depPerMonth;
+
+            // 3. Tax Calculation
+            const tax = taxableIncome > 0 ? taxableIncome * (state.global.taxRate / 100) : 0;
+
+            // 4. Net Cashflow (After-Tax Cash Flow)
+            // Cash Flow = EBITDA - Interest - Tax
+            const netCashFlow = preTaxCash - tax;
+
+            // 5. Net Income (Accounting)
+            // Net Income = Taxable Income - Tax
+            const netIncome = taxableIncome - tax;
+
+            const netProfitEl = getEl('res-net-profit');
+            // Display Net Cash Flow as the main metric
+            if (netProfitEl) {
+                netProfitEl.innerText = fwc(netCashFlow) + '원';
+                netProfitEl.className = `text-4xl lg:text-6xl font-black tracking-tighter ${netCashFlow > 0 ? 'text-white' : 'text-red-500'}`;
+            }
+
+            updateText('current-profit-header', fwc(netCashFlow) + '원');
+            updateText('res-gross', fwc(totalGross) + '원');
+            updateText('res-fee-vat', '-' + fwc(fee + vat));
+            updateText('res-net-rev', fwc(netRev) + '원');
+            updateText('res-opex', '-' + fwc(totalOpex));
+            updateText('res-fixed-sub', fwc(state.global.fixedCost));
+            updateText('res-var-sub', fwc(totalVarCost));
+            updateText('res-ebitda', fwc(ebitda) + '원');
+            updateText('res-tax-int', '-' + fwc(interest + tax));
+            updateText('build-sit-profit', fwc(netCashFlow) + '원');
+
+            // Update "Current Total Rent" and "Diff" in Building Situation Tab
+            const totalCurrentRent =
+                (state.b1.currentRent || 0) +
+                (state.f1.currentRent || 0) +
+                (state.f2.currentRent || 0) +
+                (state.f3.currentRent || 0) +
+                (state.f4.currentRent || 0);
+
+            updateText('build-sit-current-total', fwc(totalCurrentRent) + '원');
+
+            const diff = netCashFlow - totalCurrentRent;
+            const diffEl = getEl('build-sit-diff');
+            if (diffEl) {
+                diffEl.innerText = (diff > 0 ? '+' : '') + fwc(diff) + '원';
+                diffEl.className = `text-2xl md:text-3xl font-black tracking-tighter ${diff >= 0 ? 'text-emerald-600' : 'text-red-500'}`;
+            }
+
+            updateText('res-tax-int', '-' + fwc(interest + tax));
+
+            // Logic Update: Compare against active floors' current rent sum
+            const activeRentBase = ['f2', 'f3', 'f4'].reduce((sum, f) => state[f].active ? sum + state[f].currentRent : sum, 0);
+            // If no floors active, avoid div by zero, use 1 or handle gracefully
+            const rentBase = activeRentBase > 0 ? activeRentBase : (state.global.rentBase || 15000000);
+
+            const imp = ((netCashFlow / rentBase) - 1) * 100;
+            updateText('res-delta', (imp > 0 ? '+' : '') + Math.round(imp) + '%');
+            updateText('res-payback', netCashFlow > 0 ? Math.ceil(state.capex.simpleAmt / netCashFlow) + '개월' : '∞');
+            updateText('total-budget-display', fwc(state.capex.simpleAmt) + '원');
+
+            const headerTotalRoomsEl = getEl('header-total-rooms');
+            if (headerTotalRoomsEl) {
+                headerTotalRoomsEl.innerText = (state.f2.active ? state.f2.rooms : 0) + (state.f3.active ? state.f3.rooms : 0) + (state.f4.active ? state.f4.rooms : 0);
+            }
+
+            const headerAvgOccEl = getEl('header-avg-occ');
+            if (headerAvgOccEl) {
+                let totalPossible = 0, totalActual = 0;['f2', 'f3', 'f4'].forEach(f => { if (state[f].active) { totalPossible += state[f].rooms; totalActual += (state[f].rooms * (state[f].occ / 100)); } });
+                headerAvgOccEl.innerText = totalPossible > 0 ? (totalActual / totalPossible * 100).toFixed(1) : 0;
+            }
+
+            const mathFormulaEl = getEl('math-formula');
+            if (mathFormulaEl) {
+                mathFormulaEl.innerHTML = `
+                    <div class="space-y-2 pt-2 border-t border-white/10">
+                        <div class="flex justify-between text-xs text-slate-300"><span>(+) Sales</span> <span>${fwc(totalGross)}</span></div>
+                        <div class="flex justify-between text-xs text-slate-300"><span>(-) Total Opex</span> <span>${fwc(totalOpex + fee + vat)}</span></div>
+                        <div class="flex justify-between text-xs text-white font-bold border-t border-white/10 pt-1"><span>(=) EBITDA</span> <span>${fwc(ebitda)}</span></div>
+                        <div class="flex justify-between text-xs text-red-300"><span>(-) Interest</span> <span>${fwc(interest)}</span></div>
+                        <div class="flex justify-between text-xs text-red-300"><span>(-) Tax</span> <span>${fwc(tax)}</span></div>
+                        <div class="flex justify-between text-base font-black text-white border-t border-white/20 pt-1 mt-1"><span>(=) Cash Flow</span> <span>${fwc(netCashFlow)}</span></div>
+                        <div class="flex justify-between text-[10px] text-slate-400 pt-1"><span>(Ref) Dep.</span> <span>-${fwc(depPerMonth)}</span></div>
+                        <div class="flex justify-between text-[10px] text-slate-400"><span>(Ref) Net Income</span> <span>${fwc(netIncome)}</span></div>
+                    </div>
+                `;
+            }
+            ['f2', 'f3', 'f4'].forEach(f => renderCalendar(f));
+
+            if (typeof updateFinancialStatement === 'function') updateFinancialStatement(totalGross, totalOpex, fee, vat, ebitda, interest, tax, netCashFlow, netIncome);
+            if (typeof updateTaxExample === 'function') updateTaxExample(totalGross, fee, vat);
+
+            // Sync Diagram (New Feature)
+            if (typeof updateBuildingDiagram === 'function') updateBuildingDiagram();
+
+            // Auto-Save
+            if (typeof saveToLocal === 'function') saveToLocal();
+        }
+
+        function toggleDiagramFloor(f) {
+            // Cycle: Rent(default) -> Airbnb -> Residential -> Office -> Rent
+            // Map to simulator state: Only 'Airbnb' is Active=True (for calculations). Others are Active=False.
+            // visualMode property is new.
+
+            const modes = ['rent', 'airbnb', 'residential', 'office'];
+            if (!state[f].visualMode) state[f].visualMode = 'rent';
+
+            const idx = modes.indexOf(state[f].visualMode);
+            const nextMode = modes[(idx + 1) % modes.length];
+
+            state[f].visualMode = nextMode;
+
+            // Sync with Simulator Logic
+            // If Airbnb -> active = true
+            // If others -> active = false (use currentRent benchmark or 0?)
+            // For now, let's keep it simple: Airbnb is the "Simulation Target".
+            // Others are considered "Passive" or "Baseline" for the sake of the 'Rent Delta' comparison.
+
+            const shouldBeActive = (nextMode === 'airbnb');
+
+            if (state[f].active !== shouldBeActive) {
+                // Only toggle if calculation status changes
+                state[f].active = shouldBeActive;
+
+                // Sync checkbox
+                const chk = document.getElementById(`toggle-${f}`);
+                if (chk) chk.checked = shouldBeActive;
+
+                // Run calcs
+                calculate();
+                // renderCalendar inside calculate handles validation
+            }
+
+            // Force Diagram Update even if active state didn't change (e.g. Rent -> Residential)
+            updateBuildingDiagram();
+        }
+
+        function handleCurrentRentChange(el, f) {
+            // Format input as currency
+            const val = rmc(el.value);
+            if (isNaN(val)) return;
+            const formatted = fwc(val);
+            el.value = formatted;
+
+            // Update state
+            state[f].currentRent = parseInt(val) || 0;
+
+            // Recalculate (to update profit delta)
+            calculate();
+
+            // Auto-Save on every calculation
+            saveToLocal();
+        }
+
+        function updateBuildingDiagram() {
+            ['b1', 'f1', 'f2', 'f3', 'f4'].forEach(f => {
+                const el = document.getElementById(`plan-${f}`);
+                if (!el) return;
+
+                // Init visualMode if missing
+                if (!state[f].visualMode) {
+                    state[f].visualMode = state[f].active ? 'airbnb' : 'rent';
+                }
+
+                const mode = state[f].visualMode;
+                const badge = el.querySelector('.status-badge');
+
+                // Reset Classes
+                el.className = el.className.replace(/border-blue-400|bg-blue-50|text-blue-800/g, '');
+                el.className = el.className.replace(/border-orange-500|bg-orange-50|text-orange-900|border-4/g, '');
+                el.className = el.className.replace(/border-red-400|bg-red-50|text-red-900/g, '');
+                el.className = el.className.replace(/border-green-500|bg-green-50|text-green-900/g, '');
+
+                // Common base
+                el.classList.remove('border-2', 'opacity-50', 'opacity-70');
+                el.classList.add('border-2');
+
+                if (mode === 'airbnb') {
+                    // Airbnb
+                    el.classList.add('border-orange-500', 'bg-orange-50', 'text-orange-900', 'border-4');
+                    el.classList.remove('border-2'); // Override
+                    if (badge) {
+                        badge.innerText = '🏨 Airbnb';
+                        badge.className = 'status-badge absolute right-full mr-2 px-2 py-1 rounded text-[10px] font-bold whitespace-nowrap hidden md:block bg-orange-100 text-orange-700';
+                    }
+                } else if (mode === 'residential') {
+                    // Residential (Red)
+                    el.classList.add('border-red-400', 'bg-red-50', 'text-red-900');
+                    if (badge) {
+                        badge.innerText = '🏠 주택 (Residential)';
+                        badge.className = 'status-badge absolute right-full mr-2 px-2 py-1 rounded text-[10px] font-bold whitespace-nowrap hidden md:block bg-red-100 text-red-700';
+                    }
+                } else if (mode === 'office') {
+                    // Office (Green)
+                    el.classList.add('border-green-500', 'bg-green-50', 'text-green-900');
+                    if (badge) {
+                        badge.innerText = '🏢 공유오피스 (Office)';
+                        badge.className = 'status-badge absolute right-full mr-2 px-2 py-1 rounded text-[10px] font-bold whitespace-nowrap hidden md:block bg-green-100 text-green-700';
+                    }
+                } else {
+                    // Rent (Blue) - Default
+                    el.classList.add('border-blue-400', 'bg-blue-50', 'text-blue-800');
+                    if (badge) {
+                        badge.innerText = '임대 (Rent)';
+                        badge.className = 'status-badge absolute right-full mr-2 px-2 py-1 rounded text-[10px] font-bold whitespace-nowrap hidden md:block bg-blue-100 text-blue-700';
+                    }
+                }
+            });
+
+
+        }
+
+        function updateTaxExample(gross, fee, vat) {
+            const set = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = fwc(val) + '원'; };
+            set('tax-example-gross', gross);
+            set('tax-example-fee', fee);
+
+            // Payout = Gross - Fee (Bank Deposit contains VAT to be paid later)
+            set('tax-example-payout', gross - fee);
+
+            const vatRow = document.getElementById('tax-example-vat-row');
+            if (vatRow) {
+                if (vat > 0) {
+                    vatRow.style.display = 'block';
+                    set('tax-example-vat', vat);
+                } else {
+                    vatRow.style.display = 'none';
+                }
+            }
+        }
+
+
+        // --- Persistence & Scenario Logic ---
+        const STORAGE_KEY = 'gold_building_data';
+        let currentSlot = 1; // Default slot
+
+        function saveToLocal() {
+            const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{"slots":{}, "autosave": null}');
+            data.autosave = state;
+            data.lastSlot = currentSlot;
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        }
+
+        function saveCurrentScenario() {
+            const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{"slots":{}, "autosave": null}');
+            if (!data.slots) data.slots = {};
+
+            data.slots[currentSlot] = JSON.parse(JSON.stringify(state)); // Deep copy
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+
+            // Visual Feedback
+            const btn = document.getElementById(`btn-sc-${currentSlot}`);
+            if (btn) {
+                const originalText = btn.innerText;
+                btn.innerText = "💾";
+                setTimeout(() => btn.innerText = originalText, 1000);
+            }
+            alert(`Scenario ${currentSlot} Saved!`);
+        }
+
+        function loadScenario(slot) {
+            currentSlot = slot;
+            updateSlotUI();
+
+            const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{"slots":{}, "autosave": null}');
+            if (data.slots && data.slots[slot]) {
+                state = data.slots[slot];
+                syncAllInputs();
+                calculate();
+                updateBuildingDiagram();
+            } else {
+                alert(`Slot ${slot} is empty. Save something first!`);
+            }
+        }
+
+        function updateSlotUI() {
+            [1, 2, 3].forEach(i => {
+                const btn = document.getElementById(`btn-sc-${i}`);
+                if (btn) {
+                    if (i === currentSlot) {
+                        btn.classList.add('bg-indigo-600', 'text-white', 'shadow-md');
+                        btn.classList.remove('text-slate-500', 'hover:bg-white');
+                    } else {
+                        btn.classList.remove('bg-indigo-600', 'text-white', 'shadow-md');
+                        btn.classList.add('text-slate-500', 'hover:bg-white');
+                    }
+                }
+            });
+        }
+
+        function loadAutoSave() {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (!raw) return false;
+
+            try {
+                const data = JSON.parse(raw);
+                if (data.autosave) {
+                    state = data.autosave;
+                    if (data.lastSlot) currentSlot = data.lastSlot;
+                    return true;
+                }
+            } catch (e) {
+                console.error("Failed to load autosave", e);
+            }
+            return false;
+        }
+
+        function toggleFloor(f) { state[f].active = getEl(`toggle-${f}`).checked; getEl(`card-${f}`).classList.toggle('inactive', !state[f].active); calculate(); }
+        function updateRooms(f, n) { state[f].rooms = n; for (let i = 1; i <= 4; i++) { const btn = getEl(`${f}-r${i}`); if (btn) btn.classList.toggle('active', i === n); } calculateCapex(); }
+        function selectBank(type, rate) { state.global.loanType = type; state.global.activeInterestRate = rate; document.querySelectorAll('.bank-btn, #bank-policy').forEach(el => el.classList.remove('active')); if (type === 'policy') getEl('bank-policy').classList.add('active'); else { const btn = getEl(`bank-${type}`); if (btn) btn.classList.add('active'); } calculate(); }
+        function updateCustomRate(val) { const r = parseFloat(val) || 0; if (state.global.loanType === 'custom') { state.global.activeInterestRate = r; calculate(); } }
+        function syncInput(k, v) { updateVal(k, parseFloat(v)); updateUI(k); calculate(); }
+        function handleTyping(k, v) { updateVal(k, parseFloat(rmc(v)) || 0); updateUI(k); calculate(); }
+        function updateVal(k, v) { if (k.startsWith('f') && k.includes('-')) { const [f, p] = k.split('-'); if (state[f]) { if (p === 'rent') state[f].currentRent = v; else state[f][p] = v; } } else if (k === 'loan') state.capex.simpleAmt = v; else if (k === 'fixed') state.global.fixedCost = v; else if (k === 'var') state.global.varCostPerNight = v; }
+        function updateUI(k) {
+            const ids = getIds(k);
+            let val;
+            if (k === 'loan') val = state.capex.simpleAmt;
+            else if (k === 'fixed') val = state.global.fixedCost;
+            else if (k === 'var') val = state.global.varCostPerNight;
+            else if (k.includes('-')) {
+                const [f, p] = k.split('-');
+                if (p === 'adr') val = state[f].adr;
+                else if (p === 'occ') val = state[f].occ;
+                else if (p === 'rent') val = state[f].currentRent;
+            }
+            const sEl = getEl(ids[0]); if (sEl) sEl.value = val; const nEl = getEl(ids[1]); if (nEl) nEl.value = k.includes('occ') ? val : fwc(val);
+        }
+        function updateTaxRate(v) { const el = getEl('tax-rate-disp'); if (el) el.innerText = v + '%'; calculate(); }
+        function toggleCapexMode() { state.capex.mode = getEl('capex-mode').checked ? 'detail' : 'simple'; getEl('capex-detail').classList.toggle('hidden', state.capex.mode === 'simple'); calculateCapex(); }
+        function setFurnitureGrade(g) { state.capex.furnGrade = g;['low', 'mid', 'high'].forEach(x => { const btn = getEl(`furn-${x}`); if (btn) btn.classList.toggle('active', x === g); }); calculateCapex(); }
+        function calculateCapex() { if (state.capex.mode === 'detail') { const c = parseInt(getEl('const-cost-input').value); const dEl = getEl('const-cost-display'); if (dEl) dEl.innerText = fwc(c / 10000) + '만원'; const fCost = { low: 8000000, mid: 15000000, high: 25000000 }[state.capex.furnGrade]; const rooms = state.f2.rooms + state.f3.rooms + state.f4.rooms; const lEl = getEl('calc-loan-amt'); if (lEl) lEl.innerText = fwc((c * BUILDING_AREA + fCost * rooms) * 0.8) + '원'; } calculate(); }
+        function applyCalculatedLoan() { const el = getEl('calc-loan-amt'); if (el) syncInput('loan', parseInt(rmc(el.innerText))); }
+        function runZeroPointScenario(type) { let t = 0; if (type === 'loss') t = -10000; if (type === 'profit') t = 10000; runTargetProfitScenario(t.toString()); }
+        function runRandom() { ['f2', 'f3', 'f4'].forEach(f => { state[f].adr = (Math.floor(Math.random() * 60) + 10) * 10000; state[f].occ = Math.floor(Math.random() * 85) + 10; }); syncAllInputs(); calculate(); }
+        function syncAllInputs() { ['f2', 'f3', 'f4'].forEach(f => { updateUI(`${f}-adr`); updateUI(`${f}-occ`); }); }
+
+        function renderCalendar(floor) {
+            const grid = getEl(`calendar-grid-${floor}`); if (!grid) return;
+            const fState = state[floor];
+            const occDisp = getEl(`occ-${floor}-disp`); if (occDisp) occDisp.innerText = fState.active ? Math.round(fState.occ) + '%' : 'OFF';
+            grid.innerHTML = '';
+            if (!fState.active) { for (let i = 0; i < 30; i++) { const d = document.createElement('div'); d.className = 'cal-day'; grid.appendChild(d); } return; }
+
+            const targetBooked = Math.round(30 * (fState.occ / 100));
+            const days = new Array(30).fill(0);
+            let indices = Array.from({ length: 30 }, (_, i) => i);
+            indices.sort(() => Math.random() - 0.5);
+            for (let i = 0; i < targetBooked; i++) days[indices[i]] = 1;
+            days.forEach(booked => { const d = document.createElement('div'); d.className = booked ? 'cal-day booked' : 'cal-day'; grid.appendChild(d); });
+        }
+
+        function updateFinancialStatement(rev, opex, fee, vat, ebitda, interest, tax, netCashFlow, netIncome) {
+            // Helpers
+            const set = (id, val) => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.innerText = (typeof val === 'number') ? fwc(val) : val;
+                }
+            };
+
+            // SYNC PROOF: Update timestamp
+            const badge = document.getElementById('sim-status-badge');
+            if (badge) {
+                badge.innerText = '⚡ SYNCED: ' + new Date().toLocaleTimeString();
+                badge.classList.remove('bg-green-100', 'text-green-700');
+                badge.classList.add('bg-green-600', 'text-white');
+            }
+
+            // --- Cost Classification for GAAP ---
+            // COGS (Cost of Goods Sold/Service) = Variable Costs (Cleaning, Laundry, Amenities)
+            // SG&A (Selling, General, Admin) = Fixed Costs (Labor, Util) + Selling (Platform Fee)
+
+            const fixedCost = state.global.fixedCost; // Total Fixed
+            const totalVarCost = opex - fixedCost; // COGS (Assumption)
+
+            // SG&A Breakdown
+            const sgaSelling = fee; // Booking Fee
+            const sgaAdmin = fixedCost; // Includes Utilities, Labor, Maint (Simplified)
+            // Note: VAT is passed as monthly (if vat enabled). If vat disabled, vat=0.
+            const vatVal = state.global.vat ? vat : 0;
+            const sgaTotal = sgaSelling + sgaAdmin + vatVal;
+
+            // Depreciation
+            const capex = state.capex.simpleAmt;
+            const depPerMonth = Math.round(capex / 60);
+
+            // --- Projection Logic (Growth Assumptions) ---
+            const growthRate = 0.05; // 5% Revenue Growth
+            const costInf = 0.03; // 3% Cost Inflation
+
+            // Year 1 (Base - Annualized)
+            // Force Year 1 to MATCH monthly inputs exactly
+            const y1_Rev = rev * 12;
+            const y1_COGS = totalVarCost * 12;
+            const y1_GP = y1_Rev - y1_COGS;
+            const y1_SGA = sgaTotal * 12;
+
+            // Re-calculate OpInc to be safe, or use passed ebitda * 12.
+            // Let's use passed ebitda to ensure consistency with dashboard 
+            const y1_OpInc = ebitda * 12;
+
+            const y1_Dep = depPerMonth * 12;
+            const y1_Int = interest * 12;
+
+            // EBT
+            const y1_EBT = y1_OpInc - y1_Dep - y1_Int;
+
+            // Tax
+            const y1_Tax = tax * 12;
+
+            // Net Income
+            // Use passed netIncome * 12 to ensure 100% consistency with dashboard logic
+            const y1_NI = netIncome ? (netIncome * 12) : (y1_EBT - y1_Tax);
+
+            // --- Render Income Statement ---
+            // Monthly Column (Sim Data)
+            set('is-rev-m', rev);
+            set('is-cogs-m', '-' + fwc(totalVarCost));
+            set('is-gp-m', rev - totalVarCost);
+            set('is-sga-total-m', '-' + fwc(sgaTotal));
+            set('is-sga-fee-m', '-' + fwc(fee));
+            set('is-sga-fix-m', '-' + fwc(fixedCost + vatVal));
+            set('is-op-m', ebitda);
+            set('is-dep-m', '-' + fwc(depPerMonth));
+            set('is-int-m', '-' + fwc(interest));
+            set('is-ebt-m', ebitda - depPerMonth - interest);
+            set('is-tax-m', '-' + fwc(tax));
+            set('is-ni-m', netIncome);
+
+            // Year 1 (Annualized)
+            set('is-rev-y1', y1_Rev);
+            set('is-cogs-y1', '-' + fwc(y1_COGS));
+            set('is-gp-y1', y1_GP);
+            set('is-sga-total-y1', '-' + fwc(y1_SGA));
+            set('is-sga-fee-y1', '-' + fwc(fee * 12));
+            set('is-sga-fix-y1', '-' + fwc(fixedCost * 12 + vatVal * 12));
+            set('is-op-y1', y1_OpInc);
+            set('is-dep-y1', '-' + fwc(y1_Dep));
+            set('is-int-y1', '-' + fwc(y1_Int));
+            set('is-ebt-y1', y1_EBT);
+            set('is-tax-y1', '-' + fwc(y1_Tax));
+            set('is-ni-y1', y1_NI);
+
+            // Remove Y2/Y3 Logic (User Request)
+
+            // --- Cash Flow Statement ---
+            // Operating CF = Net Income + Depreciation (Non-cash expense added back)
+            // Use netCashFlow passed from calculator directly for consistency
+            const ocfAnnual = netCashFlow ? (netCashFlow * 12) : (y1_NI + y1_Dep);
+
+            set('fs-cf-ni', fwc(y1_NI));
+            set('fs-cf-dep', fwc(y1_Dep));
+            set('fs-cf-operating', fwc(ocfAnnual));
+
+            // Investing CF = -Capex (Initial investment)
+            // Use proper CAPEX from state (not hardcoded 600M)
+            const initialCapex = state.capex.simpleAmt;
+            set('fs-cf-capex', '-' + fwc(initialCapex));
+            set('fs-cf-investing', '-' + fwc(initialCapex));
+
+            // Financing CF = +Loan (from state.capex.simpleAmt)
+            // Assumption: Loan covers 100% of Capex or explicit Loan amount?
+            // In simulator, 'start' or 'loan' is the investment amount.
+            // Let's assume Loan Logic: Loan Amount = state.capex.simpleAmt
+            const loanAmt = state.capex.simpleAmt;
+            set('fs-cf-loan', fwc(loanAmt));
+            set('fs-cf-financing', fwc(loanAmt));
+
+            // Net Cash Change (Year 0/1)
+            // Net Cash = Loan (Inflow) - Capex (Outflow) + OCF (Year 1)
+            const netCashChange = loanAmt - initialCapex + ocfAnnual;
+            set('fs-cf-net', fwc(netCashChange));
+
+            // --- Investment Metrics ---
+            // 1. Cap Rate = NOI / Total Value
+            // Total Value: Land + Bldg (30억 fixed) + Remodeling (Capex).
+            const landBldgValue = 3000000000;
+            const totalInvestmentValue = landBldgValue + state.capex.simpleAmt;
+            const capRate = (y1_OpInc / totalInvestmentValue) * 100; // OpInc is EBITDA here
+            document.getElementById('fs-metric-cap').innerText = capRate.toFixed(2) + '%';
+
+            // 2. ROE = Net Income / Equity
+            // Equity = Total Investment Value - Loan.
+            // If Loan = Capex, then Equity = LandBldgValue (30억).
+            const equity = totalInvestmentValue - loanAmt;
+            const roe = (equity > 0) ? (y1_NI / equity) * 100 : 0;
+            document.getElementById('fs-metric-roe').innerText = roe.toFixed(2) + '%';
+
+            // 3. DSCR = NOI / Debt Service
+            const annualDebtService = y1_Int;
+            const dscr = (annualDebtService > 0) ? (y1_OpInc / annualDebtService) : 0;
+            document.getElementById('fs-metric-dscr').innerText = dscr.toFixed(2) + 'x';
+
+            // 4. Cash on Cash = Pre-Tax Cash Flow / Equity
+            // Pre-Tax Cash Flow = EBITDA - Interest
+            const preTaxCF = y1_OpInc - annualDebtService;
+            const coc = (equity > 0) ? (preTaxCF / equity) * 100 : 0;
+            document.getElementById('fs-metric-coc').innerText = coc.toFixed(2) + '%';
+        }
+
+    </script>
+    <script src="https://unpkg.com/globe.gl"></script>
+    <script>
+        // 3D Globe Visualization Logic
+        document.addEventListener('DOMContentLoaded', () => {
+            const globeContainer = document.getElementById('globeViz');
+            
+            // Only initialize if container exists
+            if (globeContainer) {
+                // Mock Data for Real Estate Value Bars (Lat, Lng, Value)
+                const koreaData = [
+                    { name: 'Seoul', lat: 37.5665, lng: 126.9780, val: 1.0, color: '#FF3366' },
+                    { name: 'Gangnam', lat: 37.5172, lng: 127.0473, val: 1.2, color: '#FF0000' },
+                    { name: 'Busan', lat: 35.1796, lng: 129.0756, val: 0.8, color: '#FFCC00' },
+                    { name: 'Incheon', lat: 37.4563, lng: 126.7052, val: 0.7, color: '#00CCFF' },
+                    { name: 'Daegu', lat: 35.8714, lng: 128.6014, val: 0.6, color: '#33FF99' },
+                    { name: 'Daejeon', lat: 36.3504, lng: 127.3845, val: 0.6, color: '#33FF99' },
+                    { name: 'Gwangju', lat: 35.1595, lng: 126.8526, val: 0.5, color: '#33FF99' },
+                    { name: 'Ulsan', lat: 35.5384, lng: 129.3114, val: 0.7, color: '#00CCFF' },
+                    { name: 'Jeju', lat: 33.4996, lng: 126.5312, val: 0.9, color: '#FF9900' },
+                    { name: 'Sejong', lat: 36.4800, lng: 127.2890, val: 0.75, color: '#FF9900' },
+                    { name: 'Suwon', lat: 37.2636, lng: 127.0286, val: 0.7, color: '#00CCFF' }
+                ];
+
+                // Generate random points around major cities to simulate 'data density'
+                const N = 60;
+                const gData = [];
+                koreaData.forEach(city => {
+                    for (let i = 0; i < 5; i++) {
+                        gData.push({
+                            lat: city.lat + (Math.random() - 0.5) * 0.2,
+                            lng: city.lng + (Math.random() - 0.5) * 0.2,
+                            val: city.val * (0.5 + Math.random() * 0.5),
+                            color: city.color
+                        });
+                    }
+                    gData.push(city); // Add the main city point
+                });
+
+                const world = Globe()
+                    (globeContainer)
+                    .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-night.jpg')
+                    .bumpImageUrl('https://unpkg.com/three-globe/example/img/earth-topology.png')
+                    .backgroundImageUrl('https://unpkg.com/three-globe/example/img/night-sky.png')
+                    .pointOfView({ lat: 36, lng: 115.5, altitude: 1.5 }, 1000) // Adjusted camera distance to place Korea on right
+                    .pointsData(gData)
+                    .pointAltitude(d => d.val * 0.15) // Reduced scale significantly
+                    .pointColor('color')
+                    .pointRadius(0.05) // Reduced radius for cleaner look
+                    .pointsMerge(true)
+                    .atmosphereColor('#3a228a')
+                    .atmosphereAltitude(0.25);
+                    // Removed hexBin layers to clean up the visual for now, focusing on the bars
+                    // .hexBinPointsData(gData) ...
+
+                // Auto-rotate settings
+                world.controls().autoRotate = false; // Stop auto-rotation to keep focus on Korea
+                
+                // Allow interaction
+                world.controls().enableZoom = true;
+                world.controls().enablePan = true;
+                world.controls().minDistance = 150; // Constrain zoom in
+                world.controls().maxDistance = 400; // Constrain zoom out
+                
+                // Adjust size on window resize
+                window.addEventListener('resize', () => {
+                    world.width(globeContainer.clientWidth);
+                    world.height(globeContainer.clientHeight);
+                });
+            }
+        });
+    </script>
+    <script src="data.js"></script>
+    <script>
+        function startExperience() {
+            const c = document.getElementById('intro-overlay-center');
+            if (c) { 
+                // Enhanced Disappearing Animation
+                c.style.transform = 'scale(1.1) translateY(-20px)'; // Little pop up
+                c.style.opacity = '0'; 
+                c.style.filter = 'blur(10px)'; // Blur out effect
+                c.style.pointerEvents = 'none';
+                
+                setTimeout(() => {
+                     c.classList.add('hidden'); // Fully hide after animation
+                }, 1000);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+             // Intro Auto-Fade Logic Removed by User Request
+             // Staying fixed in center
+            
+            // Load separated report content to keep file size small
+            if (typeof reportData !== 'undefined') {
+                // const r1 = document.getElementById('report1-inner');
+                // if (r1) r1.innerHTML = reportData.report1;
+                // const r2 = document.getElementById('report2-content-section');
+                // if (r2) r2.innerHTML = reportData.report2;
+                // NOTE: report-tax-section content is intentionally kept in index.html
+                // (injected from pdf_tax_guide.txt) to preserve the full text exactly.
+            }
+        });
+    </script>
+</body>
+
+</html>

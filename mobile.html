@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gold Building Financial Simulation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>@import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800;900&display=swap');</style>
+    <style>
+        body { font-family: 'Noto Sans KR', sans-serif; background-color: #f3f4f6; color: #1f2937; }
+        .chart-container { position: relative; width: 100%; height: 350px; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.4s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        input[type=range] { accent-color: #4f46e5; }
+        .gb-sim-font { font-family: 'Pretendard', sans-serif; }
+        .config-card { background: white; border: 1px solid #e2e8f0; border-radius: 1.25rem; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.02); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .config-card:hover { box-shadow: 0 10px 25px -10px rgba(15, 23, 42, 0.2); transform: translateY(-2px); }
+        .btn-toggle { background: #f8fafc; color: #475569; font-weight: 700; border: 1px solid #e2e8f0; }
+        .btn-toggle.active { background: #eef2ff; color: #4f46e5; border-color: #c7d2fe; }
+        .typing-input { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 0.5rem 0.75rem; font-weight: 700; color: #0f172a; width: 100%; text-align: right; }
+        .gb-slider { width: 100%; accent-color: #f97316; }
+        .mobile-tab-btn { font-size: 11px; font-weight: 700; color: #1f2937; }
+        .pb-safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+    </style>
+</head>
+
+<body class="bg-slate-100">
+    <main class="max-w-6xl mx-auto px-4 py-6 pb-28">
+        <section id="report" class="tab-content active space-y-6">
+                                        <span class="text-[10px] font-bold text-slate-400 uppercase">1박 요금</span>
+                                        <div class="flex items-baseline gap-1">
+                                            <input type="text" id="f4-adr-num" class="typing-input w-24 md:!w-32"
+                                                oninput="handleTyping('f4-adr', this.value)">
+                                            <span class="text-[10px] font-bold text-slate-400">원</span>
+                                        </div>
+                                    </div>
+                                    <input type="range" id="f4-adr-range" min="0" max="1500000" step="5000"
+                                        oninput="syncInput('f4-adr', this.value)" class="gb-slider">
+                                </div>
+                                <div>
+                                    <div class="flex justify-between items-baseline mb-1">
+                                        <span class="text-[10px] font-bold text-slate-400 uppercase">가동률</span>
+                                        <div class="flex items-baseline gap-1">
+                                            <input type="number" id="f4-occ-num" class="typing-input !w-16"
+                                                oninput="handleTyping('f4-occ', this.value)">
+                                            <span class="text-[10px] font-bold text-orange-500">%</span>
+                                        </div>
+                                    </div>
+                                    <input type="range" id="f4-occ-range" min="0" max="100" step="0.01"
+                                        oninput="syncInput('f4-occ', this.value)" class="gb-slider">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. Expenses & Finance -->
+                    <div id="section-tax-finance" class="config-card space-y-6">
+                        <div class="flex justify-between items-center border-b border-slate-100 pb-2 mb-2">
+                            <span class="text-base font-bold">3. 운영 비용 및 금융</span>
+                            <span
+                                class="text-[9px] font-bold bg-slate-100 px-2 py-1 rounded text-slate-500 uppercase">Cost
+                                & Finance</span>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pb-6 border-b border-slate-100">
+                            <div>
+                                <div class="flex justify-between items-baseline mb-1">
+                                    <span class="text-[10px] font-bold text-slate-500 block uppercase">월 고정 비용</span>
+                                    <div class="flex items-baseline gap-1">
+                                        <input type="text" id="fixed-cost-num" class="typing-input w-28 md:!w-32"
+                                            oninput="handleTyping('fixed', this.value)">
+                                        <span class="text-[10px] font-bold text-slate-400">원</span>
+                                    </div>
+                                </div>
+                                <input type="range" id="fixed-cost-range" min="0" max="10000000" step="100000"
+                                    class="mt-2 gb-slider" oninput="syncInput('fixed', this.value)">
+                            </div>
+                            <div>
+                                <div class="flex justify-between items-baseline mb-1">
+                                    <span class="text-[10px] font-bold text-purple-600 block uppercase">1박당 변동비</span>
+                                    <div class="flex items-baseline gap-1">
+                                        <input type="text" id="var-cost-num"
+                                            class="typing-input !text-purple-600 !border-purple-200 !w-24"
+                                            oninput="handleTyping('var', this.value)">
+                                        <span class="text-[10px] font-bold text-purple-400">원</span>
+                                    </div>
+                                </div>
+                                <input type="range" id="var-cost-range" min="0" max="100000" step="1000"
+                                    class="mt-2 accent-purple-500 gb-slider" oninput="syncInput('var', this.value)">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-500 mb-2 block uppercase">금융 상품</label>
+                                <div onclick="selectBank('policy', 2.25)" id="bank-policy"
+                                    class="loan-option active p-3 flex justify-between items-center mb-2">
+                                    <span class="font-bold text-xs">관광진흥개발기금</span>
+                                    <span class="font-black text-sm text-orange-600">2.25%</span>
+                                </div>
+                                <div class="bank-select-grid">
+                                    <button onclick="selectBank('shinhan', 4.15)" id="bank-shinhan"
+                                        class="bank-btn"><span
+                                            class="block text-[8px] text-slate-400">신한</span>4.15%</button>
+                                    <button onclick="selectBank('hana', 3.98)" id="bank-hana" class="bank-btn"><span
+                                            class="block text-[8px] text-slate-400">하나</span>3.98%</button>
+                                    <button onclick="selectBank('kb', 4.25)" id="bank-kb" class="bank-btn"><span
+                                            class="block text-[8px] text-slate-400">국민</span>4.25%</button>
+                                    <button onclick="selectBank('custom', 4.0)" id="bank-custom" class="bank-btn">
+                                        <input type="text" id="custom-rate-input"
+                                            class="w-6 border-b border-orange-300 text-center outline-none bg-transparent"
+                                            value="4.0" oninput="updateCustomRate(this.value)">%
+                                    </button>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between items-center mb-2">
+                                    <label class="text-[10px] font-bold text-slate-500 uppercase">소득세율</label>
+                                    <span class="text-xs font-black text-slate-700" id="tax-rate-disp">15%</span>
+                                </div>
+                                <input type="range" id="tax-rate-range" min="6" max="45" step="1" value="15"
+                                    oninput="updateTaxRate(this.value)" class="gb-slider">
+                                <div class="flex items-center gap-2 mt-4">
+                                    <input type="checkbox" id="vat-toggle" class="w-4 h-4 accent-orange-600 rounded"
+                                        checked onchange="calculate()">
+                                    <label class="text-[10px] font-bold text-slate-500 uppercase">부가세 (10%) 포함</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Results Dashboard -->
+                <div class="lg:col-span-5">
+                    <div class="result-card shadow-2xl">
+                        <div class="mb-10 text-center lg:text-left">
+                            <p class="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] mb-2">Monthly Net
+                                Cashflow</p>
+                            <div class="text-3xl md:text-4xl lg:text-6xl font-black text-white tracking-tighter"
+                                id="res-net-profit">0원</div>
+                            <div id="profit-tag"
+                                class="mt-4 inline-block px-4 py-1 rounded-full text-[9px] font-black tracking-widest bg-slate-700 text-slate-300 uppercase">
+                                Analysis Ready</div>
+                        </div>
+
+                        <!-- 3 Miniature Calendars (Unified Display) -->
+                        <div class="mb-8 flex flex-col gap-4">
+                            <p class="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Floor Availability
+                                Simulation (30 Days)</p>
+                            <div class="flex gap-2">
+                                <div class="mini-cal-box">
+                                    <div class="mini-cal-title"><span>2F</span> <span id="occ-f2-disp">0%</span></div>
+                                    <div class="calendar-grid" id="calendar-grid-f2"></div>
+                                </div>
+                                <div class="mini-cal-box">
+                                    <div class="mini-cal-title"><span>3F</span> <span id="occ-f3-disp">0%</span></div>
+                                    <div class="calendar-grid" id="calendar-grid-f3"></div>
+                                </div>
+                                <div class="mini-cal-box">
+                                    <div class="mini-cal-title"><span>4F</span> <span id="occ-f4-disp">0%</span></div>
+                                    <div class="calendar-grid" id="calendar-grid-f4"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-3 text-xs mb-8 border-b border-white/10 pb-8 font-medium">
+                            <div class="flex justify-between items-center text-slate-300"><span>총 매출 (Gross)</span><span
+                                    class="text-white font-bold" id="res-gross">0원</span></div>
+                            <div class="flex justify-between text-[10px] text-slate-500 pl-2"><span>플랫폼 수수료 +
+                                    부가세</span><span class="text-red-400" id="res-fee-vat">-0원</span></div>
+                            <div class="flex justify-between items-center text-slate-300 pt-1"><span>총 운영비
+                                    (OPEX)</span><span class="text-red-400 font-bold" id="res-opex">-0원</span></div>
+                            <div class="flex justify-between items-center text-slate-300 pt-1"><span>영업 이익
+                                    (EBITDA)</span><span class="text-white font-bold" id="res-ebitda">0원</span></div>
+                            <div class="flex justify-between items-center text-slate-400 text-[10px]"><span>금융 이자 +
+                                    소득세</span><span class="text-red-400 font-bold" id="res-tax-int">-0원</span></div>
+                        </div>
+
+                        <div class="mb-8">
+                            <div class="math-box space-y-1" id="math-formula"></div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4 text-center">
+                            <div class="bg-white/5 p-4 rounded-2xl border border-white/10">
+                                <p class="text-[8px] text-slate-500 font-black uppercase mb-1 tracking-widest">Rent
+                                    Delta</p>
+                                <p class="text-2xl font-black text-green-400" id="res-delta">0%</p>
+                            </div>
+                            <div class="bg-white/5 p-4 rounded-2xl border border-white/10">
+                                <p class="text-[8px] text-slate-500 font-black uppercase mb-1 tracking-widest">Payback
+                                </p>
+                                <p class="text-2xl font-black text-orange-400" id="res-payback">0개월</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 6: FINANCIAL STATEMENT -->
+        <section id="financial" class="tab-content hidden space-y-10">
+            <div class="bg-white p-8 md:p-12 rounded-3xl shadow-sm border border-slate-200">
+                <div class="flex justify-between items-center mb-8">
+                    <h2 class="text-3xl font-black text-slate-900 leading-tight">Financial Analysis Report</h2>
+                    <span
+                        class="px-3 py-1 bg-green-100 text-green-700 font-bold rounded-full text-xs uppercase tracking-wider">Live
+                        Simulation</span>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                    <!-- Professional GAAP Income Statement -->
+                    <div class="col-span-1 lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200">
+                        <div class="flex justify-between items-end mb-6">
+                            <h3 class="text-xl font-bold text-slate-900 flex items-center gap-2">
+                                <span class="w-2 h-8 bg-indigo-500 rounded-sm"></span>
+                                포괄손익계산서 (Statement of Comprehensive Income)
+                            </h3>
+                            <span class="text-[10px] text-slate-400 font-medium">Unit: KRW (Won)</span>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-right">
+                                <thead>
+                                    <tr class="bg-slate-900 text-white border-b-2 border-indigo-500">
+                                        <th class="py-3 px-4 text-left font-bold uppercase text-xs w-1/3">Account (계정과목)
+                                        </th>
+                                        <th class="py-3 px-4 font-bold uppercase text-xs w-1/5">Year 1 (2025)</th>
+                                        <th class="py-3 px-4 font-bold uppercase text-xs w-1/5 text-slate-300">Year 2
+                                            (Est.)</th>
+                                        <th class="py-3 px-4 font-bold uppercase text-xs w-1/5 text-slate-300">Year 3
+                                            (Est.)</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                                    <!-- Revenue Section -->
+                                    <tr class="hover:bg-slate-50">
+                                        <td class="py-3 px-4 text-left font-black text-slate-800">Total Revenue (매출액)
+                                        </td>
+                                        <td class="py-3 px-4 font-black text-slate-900" id="is-rev-y1">0</td>
+                                        <td class="py-3 px-4 font-black text-slate-500" id="is-rev-y2">0</td>
+                                        <td class="py-3 px-4 font-black text-slate-500" id="is-rev-y3">0</td>
+                                    </tr>
+                                    <tr class="hover:bg-slate-50">
+                                        <td class="py-2 px-4 text-left text-slate-500 text-xs pl-8">(-) Cost of Goods
+                                            Sold (매출원가)</td>
+                                        <td class="py-2 px-4 text-red-500" id="is-cogs-y1">0</td>
+                                        <td class="py-2 px-4 text-red-400" id="is-cogs-y2">0</td>
+                                        <td class="py-2 px-4 text-red-400" id="is-cogs-y3">0</td>
+                                    </tr>
+
+                                    <!-- Gross Profit -->
+                                    <tr class="bg-indigo-50/30 font-bold border-t border-slate-200">
+                                        <td class="py-3 px-4 text-left text-indigo-900">Gross Profit (매출총이익)</td>
+                                        <td class="py-3 px-4 text-indigo-900" id="is-gp-y1">0</td>
+                                        <td class="py-3 px-4 text-indigo-900" id="is-gp-y2">0</td>
+                                        <td class="py-3 px-4 text-indigo-900" id="is-gp-y3">0</td>
+                                    </tr>
+
+                                    <!-- SG&A Section -->
+                                    <tr class="hover:bg-slate-50">
+                                        <td class="py-2 px-4 text-left text-slate-500 text-xs pl-8 pt-4">Selling,
+                                            General, & Admin (판관비)</td>
+                                        <td class="py-2 px-4 text-red-500 pt-4" id="is-sga-total-y1">0</td>
+                                        <td class="py-2 px-4 text-red-400 pt-4" id="is-sga-total-y2">0</td>
+                                        <td class="py-2 px-4 text-red-400 pt-4" id="is-sga-total-y3">0</td>
+                                    </tr>
+                                    <tr class="hover:bg-slate-50 text-[10px] text-slate-400">
+                                        <td class="py-1 px-4 text-left pl-12">Of which: Platform Fees</td>
+                                        <td class="py-1 px-4" id="is-sga-fee-y1">0</td>
+                                        <td class="py-1 px-4" id="is-sga-fee-y2">0</td>
+                                        <td class="py-1 px-4" id="is-sga-fee-y3">0</td>
+                                    </tr>
+                                    <tr class="hover:bg-slate-50 text-[10px] text-slate-400">
+                                        <td class="py-1 px-4 text-left pl-12 border-b border-slate-100 pb-2">Of which:
+                                            Utilities & Admin</td>
+                                        <td class="py-1 px-4 border-b border-slate-100 pb-2" id="is-sga-fix-y1">0</td>
+                                        <td class="py-1 px-4 border-b border-slate-100 pb-2" id="is-sga-fix-y2">0</td>
+                                        <td class="py-1 px-4 border-b border-slate-100 pb-2" id="is-sga-fix-y3">0</td>
+                                    </tr>
+
+                                    <!-- Operating Income -->
+                                    <tr class="bg-indigo-50 text-indigo-900">
+                                        <td class="py-3 px-4 text-left font-black">Operating Income (영업이익/EBITDA)</td>
+                                        <td class="py-3 px-4 font-black text-lg" id="is-op-y1">0</td>
+                                        <td class="py-3 px-4 font-black text-lg" id="is-op-y2">0</td>
+                                        <td class="py-3 px-4 font-black text-lg" id="is-op-y3">0</td>
+                                    </tr>
+
+                                    <!-- Dep & Init -->
+                                    <tr class="hover:bg-slate-50">
+                                        <td class="py-2 px-4 text-left text-slate-500 text-xs pl-8">(-) Depreciation
+                                            (감가상각비)</td>
+                                        <td class="py-2 px-4 text-slate-500" id="is-dep-y1">0</td>
+                                        <td class="py-2 px-4 text-slate-500" id="is-dep-y2">0</td>
+                                        <td class="py-2 px-4 text-slate-500" id="is-dep-y3">0</td>
+                                    </tr>
+                                    <tr class="hover:bg-slate-50">
+                                        <td class="py-2 px-4 text-left text-slate-500 text-xs pl-8">(-) Interest Expense
+                                            (이자비용)</td>
+                                        <td class="py-2 px-4 text-red-500" id="is-int-y1">0</td>
+                                        <td class="py-2 px-4 text-red-400" id="is-int-y2">0</td>
+                                        <td class="py-2 px-4 text-red-400" id="is-int-y3">0</td>
+                                    </tr>
+
+                                    <!-- Pretax -->
+                                    <tr class="font-bold text-slate-700 bg-slate-50/50">
+                                        <td class="py-2 px-4 text-left">Pretax Income (세전이익)</td>
+                                        <td class="py-2 px-4" id="is-ebt-y1">0</td>
+                                        <td class="py-2 px-4" id="is-ebt-y2">0</td>
+                                        <td class="py-2 px-4" id="is-ebt-y3">0</td>
+                                    </tr>
+                                    <tr class="hover:bg-slate-50">
+                                        <td class="py-2 px-4 text-left text-slate-500 text-xs pl-8">(-) Income Tax (법인세
+                                            등)</td>
+                                        <td class="py-2 px-4 text-red-500" id="is-tax-y1">0</td>
+                                        <td class="py-2 px-4 text-red-400" id="is-tax-y2">0</td>
+                                        <td class="py-2 px-4 text-red-400" id="is-tax-y3">0</td>
+                                    </tr>
+
+                                    <!-- Net Income -->
+                                    <tr class="bg-yellow-100 text-yellow-900 border-t-2 border-yellow-400">
+                                        <td class="py-4 px-4 text-left font-black text-sm">Net Income (당기순이익)</td>
+                                        <td class="py-4 px-4 font-black text-xl" id="is-ni-y1">0</td>
+                                        <td class="py-4 px-4 font-black text-xl text-yellow-800" id="is-ni-y2">0</td>
+                                        <td class="py-4 px-4 font-black text-xl text-yellow-800" id="is-ni-y3">0</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Cash Flow & Investment Metrics -->
+                    <div class="space-y-8">
+
+                        <!-- Cash Flow Statement -->
+                        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                            <h3 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                                <span class="w-2 h-6 bg-green-500 rounded-sm"></span>
+                                현금흐름표 (Cash Flow Statement)
+                            </h3>
+                            <table class="w-full text-xs">
+                                <tbody class="divide-y divide-slate-100">
+                                    <tr>
+                                        <td class="py-2 font-bold text-slate-700">영업활동 현금흐름 (Operating CF)</td>
+                                        <td class="py-2 text-right font-bold text-green-600" id="fs-cf-operating">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="py-1 pl-4 text-slate-500">당기순이익</td>
+                                        <td class="py-1 text-right text-slate-500" id="fs-cf-ni">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="py-1 pl-4 text-slate-500">+ 감가상각비 (현금유출 없음)</td>
+                                        <td class="py-1 text-right text-slate-500" id="fs-cf-dep">0</td>
+                                    </tr>
+                                    <tr class="border-t border-slate-100">
+                                        <td class="py-2 font-bold text-slate-700">투자활동 현금흐름 (Investing CF)</td>
+                                        <td class="py-2 text-right font-bold text-red-500" id="fs-cf-investing">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="py-1 pl-4 text-slate-500">초기 시설투자 (CAPEX)</td>
+                                        <td class="py-1 text-right text-slate-500" id="fs-cf-capex">0</td>
+                                    </tr>
+                                    <tr class="border-t border-slate-100">
+                                        <td class="py-2 font-bold text-slate-700">재무활동 현금흐름 (Financing CF)</td>
+                                        <td class="py-2 text-right font-bold text-indigo-500" id="fs-cf-financing">0
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="py-1 pl-4 text-slate-500">장기차입금 증가</td>
+                                        <td class="py-1 text-right text-slate-500" id="fs-cf-loan">0</td>
+                                    </tr>
+                                    <tr class="bg-slate-50 border-t-2 border-slate-200">
+                                        <td class="py-3 font-black text-slate-900">기말 현금 잔액 (Net Cash Change)</td>
+                                        <td class="py-3 text-right font-black text-slate-900" id="fs-cf-net">0</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <p class="text-[10px] text-slate-400 mt-2 text-right">* Year 0 (초기 투자 시점) 기준 현금흐름 요약입니다.</p>
+                        </div>
+
+                        <!-- Investment Analysis -->
+                        <div class="bg-slate-900 p-6 rounded-2xl text-white shadow-lg">
+                            <h3 class="text-lg font-bold mb-6 flex items-center gap-2">
+                                <span class="w-2 h-6 bg-orange-500 rounded-sm"></span>
+                                투자 지표 분석 (Investment Analysis)
+                            </h3>
+                            <div class="grid grid-cols-2 gap-6">
+                                <div>
+                                    <p class="text-[10px] text-slate-400 uppercase tracking-wider mb-1">Cap Rate (자본환원율)
+                                    </p>
+                                    <p class="text-3xl font-black text-orange-400" id="fs-metric-cap">0.0%</p>
+                                    <p class="text-[9px] text-slate-500 mt-1">NOI / Total Investment</p>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] text-slate-400 uppercase tracking-wider mb-1">ROE (자기자본이익률)
+                                    </p>
+                                    <p class="text-3xl font-black text-green-400" id="fs-metric-roe">0.0%</p>
+                                    <p class="text-[9px] text-slate-500 mt-1">Net Income / Equity</p>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] text-slate-400 uppercase tracking-wider mb-1">DSCR (부채상환비율)
+                                    </p>
+                                    <p class="text-3xl font-black text-blue-400" id="fs-metric-dscr">0.00x</p>
+                                    <p class="text-[9px] text-slate-500 mt-1">NOI / Debt Service</p>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] text-slate-400 uppercase tracking-wider mb-1">Cash on Cash</p>
+                                    <p class="text-3xl font-black text-purple-400" id="fs-metric-coc">0.0%</p>
+                                    <p class="text-[9px] text-slate-500 mt-1">Pre-Tax CF / Equity</p>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+
+
+        </section>
+    </main>
+
+    <footer class="py-12 text-center text-slate-400 text-xs border-t bg-white mt-10">
+        <p>© 2024 Mapo-Hongdae Biz Research Group. For Simulation Purposes Only.</p>
+    </footer>
+
+    <!-- Bottom Navigation Bar -->
+    <nav
+        class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 px-2 py-3 pb-safe-bottom flex justify-around items-center z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] safe-area-pb">
+        <button onclick="showTab('report')" id="b-report"
+            class="mobile-tab-btn flex flex-col items-center gap-1 p-2 rounded-xl transition w-full">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                </path>
+            </svg>
+            <span class="text-[9px] font-bold">Report</span>
+        </button>
+        <button onclick="showTab('visual')" id="b-visual"
+            class="mobile-tab-btn flex flex-col items-center gap-1 p-2 rounded-xl transition w-full text-slate-400">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path>
+            </svg>
+            <span class="text-[9px] font-bold">Data</span>
+        </button>
+        <button onclick="showTab('tax')" id="b-tax"
+            class="mobile-tab-btn flex flex-col items-center gap-1 p-2 rounded-xl transition w-full text-slate-400">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253">
+                </path>
+            </svg>
+            <span class="text-[9px] font-bold">세무/재무</span>
+        </button>
+        <button onclick="showTab('gbsim')" id="b-gbsim"
+            class="mobile-tab-btn flex flex-col items-center gap-1 p-2 rounded-xl transition w-full text-slate-400">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4">
+                </path>
+            </svg>
+            <span class="text-[9px] font-bold">GB Sim</span>
+        </button>
+        <button onclick="showTab('financial')" id="b-financial"
+            class="mobile-tab-btn flex flex-col items-center gap-1 p-2 rounded-xl transition w-full text-slate-400">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                </path>
+            </svg>
+            <span class="text-[9px] font-bold">Finance</span>
+        </button>
+    </nav>
+    <style>
+        .pb-safe-bottom {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+    </style>
+
+    <script>
+        // Data Basis
+        const priceDataSets = [
+            [85000, 150000, 130000, 240000], // Weekday
+            [135000, 225000, 195000, 360000] // Weekend
+        ];
+        const labels = ['에어비앤비(원룸)', '에어비앤비(독채)', '3성급 호텔', '4성급 호텔'];
+        const trendValues = [65, 72, 60, 65, 78, 72, 88, 92, 74, 85, 70, 95];
+
+        // GB Simulator State
+        let state = {
+            f2: { active: true, rooms: 3, adr: 300000, occ: 70 },
+            f3: { active: true, rooms: 3, adr: 250000, occ: 75 },
+            f4: { active: true, rooms: 1, adr: 450000, occ: 85 },
+            capex: { mode: 'simple', simpleAmt: 350000000, pyCost: 2500000, furnGrade: 'mid' },
+            global: { fixedCost: 4000000, varCostPerNight: 15000, loanType: 'policy', activeInterestRate: 2.25, feeRate: 0.15, rentBase: 15000000, days: 30.41, taxRate: 15, vat: true },
+            ui: { activeCalTab: 'f2' }
+        };
+        const BUILDING_AREA = 96;
+
+        let pChart, tChart, dChart, bChart;
+
+        window.onload = () => {
+            initCharts();
+            // run(); Removed
+            // GB Simulator Init
+            calculate();
+            syncInput('loan', 350000000);
+            syncInput('fixed', 4000000);
+            syncInput('var', 15000);
+            updateRooms('f2', 3);
+            updateRooms('f3', 3);
+            updateRooms('f4', 1);
+        };
+
+        function showTab(tabId) {
+            // Update Bottom Nav Styles
+            const tabs = ['report', 'visual', 'tax', 'gbsim', 'financial'];
+            // If report2 is called, we treat it as report for nav highlighting, but show report2 content
+            const highlightId = tabId === 'report2' ? 'report' : tabId;
+
+            tabs.forEach(id => {
+                const btn = document.getElementById('b-' + id);
+                if (btn) {
+                    const isActive = (id === highlightId);
+                    if (isActive) {
+                        btn.classList.remove('text-slate-400');
+                        btn.classList.add('text-indigo-600');
+                        // Animation for active tab
+                        btn.querySelector('svg').classList.add('stroke-[2.5]');
+                    } else {
+                        btn.classList.remove('text-indigo-600');
+                        btn.classList.add('text-slate-400');
+                        btn.querySelector('svg').classList.remove('stroke-[2.5]');
+                    }
+                }
+            });
+
+            // Handle Content Visibility
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+            if (tabId === 'report' || tabId === 'report2') {
+                const reportSec = document.getElementById('report');
+                if (reportSec) reportSec.classList.add('active');
+
+                const r1 = document.getElementById('report1-inner');
+                const r2 = document.getElementById('report2-content-section');
+
+                if (tabId === 'report2') {
+                    if (r1) r1.classList.add('hidden');
+                    if (r2) r2.classList.remove('hidden');
+                } else {
+                    if (r1) r1.classList.remove('hidden');
+                    if (r2) r2.classList.add('hidden');
+                }
+            } else {
+                const sec = document.getElementById(tabId);
+                if (sec) sec.classList.add('active');
+            }
+
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            // Trigger Resize for Charts/Layouts
+            if (tabId === 'gbsim' || tabId === 'financial') {
+                setTimeout(() => {
+                    if (typeof calculate === 'function') calculate();
+                }, 100);
+            }
+        }
+
+        function initCharts() {
+            // Price Bar
+            pChart = new Chart(document.getElementById('priceChart'), {
+                type: 'bar',
+                data: { labels, datasets: [{ data: priceDataSets[0], backgroundColor: '#6366f1', borderRadius: 8 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+            // Trend Line
+            tChart = new Chart(document.getElementById('trendChart'), {
+                type: 'line',
+                data: {
+                    labels: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
+                    datasets: [{ data: trendValues, borderColor: '#6366f1', fill: true, backgroundColor: 'rgba(99,102,241,0.05)', tension: 0.4 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+            // ROI Donut - Removed
+            // Accumulation Bar - Removed
+        }
+
+        function updatePrice(idx) {
+            pChart.data.datasets[0].data = priceDataSets[idx];
+            pChart.update();
+            document.getElementById('pb-0').className = idx === 0 ? "px-4 py-1.5 text-xs font-bold rounded-md bg-white text-indigo-600 shadow-sm" : "px-4 py-1.5 text-xs font-medium text-slate-500";
+            document.getElementById('pb-1').className = idx === 1 ? "px-4 py-1.5 text-xs font-bold rounded-md bg-white text-indigo-600 shadow-sm" : "px-4 py-1.5 text-xs font-medium text-slate-500";
+        }
+
+
+
+        // --- GB Simulator Functions ---
+        const fwc = (n) => Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        const rmc = (s) => s.toString().replace(/,/g, "");
+        const getEl = (id) => document.getElementById(id);
+
+        function getIds(k) {
+            if (k === 'loan') return ['loan-input', 'loan-input-num'];
+            if (k === 'fixed') return ['fixed-cost-range', 'fixed-cost-num'];
+            if (k === 'var') return ['var-cost-range', 'var-cost-num'];
+            return [`${k}-range`, `${k}-num`];
+        }
+
+        function runTargetProfitScenario(val) {
+            const targetNet = parseInt(rmc(val)); if (isNaN(targetNet)) return;
+            const fixed = state.global.fixedCost;
+            let potGross = 0, potNights = 0;
+            ['f2', 'f3', 'f4'].forEach(f => { if (state[f].active) { potGross += state[f].rooms * state.global.days * state[f].adr; potNights += state[f].rooms * state.global.days; } });
+            if (potGross === 0) return;
+            let low = 0, high = 100, finalOCC = 0;
+            for (let i = 0; i < 30; i++) {
+                let mid = (low + high) / 2;
+                let sGross = potGross * (mid / 100), sNights = potNights * (mid / 100);
+                let sVar = sNights * state.global.varCostPerNight, sFee = sGross * state.global.feeRate, sVat = state.global.vat ? (sGross * 0.1) : 0;
+                let sNetRev = sGross - sFee - sVat, sEbitda = sNetRev - (fixed + sVar);
+                let sPreTax = sEbitda - (state.capex.simpleAmt * (state.global.activeInterestRate / 100) / 12);
+                let sTax = sPreTax > 0 ? sPreTax * (state.global.taxRate / 100) : 0;
+                if (sPreTax - sTax < targetNet) low = mid; else high = mid;
+                finalOCC = mid;
+            }
+            finalOCC = Math.round(finalOCC * 100) / 100; if (finalOCC > 100) finalOCC = 100;
+            ['f2', 'f3', 'f4'].forEach(f => { if (state[f].active) state[f].occ = finalOCC; });
+            syncAllInputs(); calculate();
+        }
+
+        function calculate() {
+            const updateText = (id, text) => { const el = getEl(id); if (el) el.innerText = text; };
+
+            state.global.taxRate = parseInt(getEl('tax-rate-range').value);
+            state.global.vat = getEl('vat-toggle').checked;
+            let totalGross = 0, totalNights = 0;
+            ['f2', 'f3', 'f4'].forEach(f => { if (state[f].active) { const n = state[f].rooms * state.global.days * (state[f].occ / 100); totalNights += n; totalGross += n * state[f].adr; } });
+
+            const totalVarCost = totalNights * state.global.varCostPerNight;
+            const fee = totalGross * state.global.feeRate, vat = state.global.vat ? (totalGross * 0.1) : 0;
+            const netRev = totalGross - fee - vat, totalOpex = state.global.fixedCost + totalVarCost, ebitda = netRev - totalOpex;
+            const interest = (state.capex.simpleAmt * (state.global.activeInterestRate / 100)) / 12, preTax = ebitda - interest;
+            const tax = preTax > 0 ? preTax * (state.global.taxRate / 100) : 0, netProfit = preTax - tax;
+
+            const netProfitEl = getEl('res-net-profit');
+            if (netProfitEl) {
+                netProfitEl.innerText = fwc(netProfit) + '원';
+                netProfitEl.className = `text-4xl lg:text-6xl font-black tracking-tighter ${netProfit > 0 ? 'text-white' : 'text-red-500'}`;
+            }
+
+            updateText('current-profit-header', fwc(netProfit) + '원');
+            updateText('res-gross', fwc(totalGross) + '원');
+            updateText('res-fee-vat', '-' + fwc(fee + vat));
+            updateText('res-net-rev', fwc(netRev) + '원');
+            updateText('res-opex', '-' + fwc(totalOpex));
+            updateText('res-fixed-sub', fwc(state.global.fixedCost));
+            updateText('res-var-sub', fwc(totalVarCost));
+            updateText('res-ebitda', fwc(ebitda) + '원');
+            updateText('res-tax-int', '-' + fwc(interest + tax));
+
+            const imp = ((netProfit / state.global.rentBase) - 1) * 100;
+            updateText('res-delta', (imp > 0 ? '+' : '') + Math.round(imp) + '%');
+            updateText('res-payback', netProfit > 0 ? Math.ceil(state.capex.simpleAmt / netProfit) + '개월' : '∞');
+            updateText('total-budget-display', fwc(state.capex.simpleAmt) + '원');
+
+            const headerTotalRoomsEl = getEl('header-total-rooms');
+            if (headerTotalRoomsEl) {
+                headerTotalRoomsEl.innerText = (state.f2.active ? state.f2.rooms : 0) + (state.f3.active ? state.f3.rooms : 0) + (state.f4.active ? state.f4.rooms : 0);
+            }
+
+            const headerAvgOccEl = getEl('header-avg-occ');
+            if (headerAvgOccEl) {
+                let totalPossible = 0, totalActual = 0;['f2', 'f3', 'f4'].forEach(f => { if (state[f].active) { totalPossible += state[f].rooms; totalActual += (state[f].rooms * (state[f].occ / 100)); } });
+                headerAvgOccEl.innerText = totalPossible > 0 ? (totalActual / totalPossible * 100).toFixed(1) : 0;
+            }
+
+            const mathFormulaEl = getEl('math-formula');
+            if (mathFormulaEl) {
+                mathFormulaEl.innerHTML = `
+                    <div class="flex justify-between text-[10px]"><span>Sales:</span> <span>${Math.round(totalGross).toLocaleString()}원</span></div>
+                    <div class="flex justify-between text-[10px]"><span>Exp:</span> <span>${Math.round(totalOpex + fee + vat).toLocaleString()}원</span></div>
+                    <div class="flex justify-between text-[10px]"><span>Finance:</span> <span>${Math.round(interest + tax).toLocaleString()}원</span></div>
+                    <div class="text-orange-400 font-black border-t border-white/5 mt-1 pt-1 text-right text-xs">Net: ${Math.round(netProfit).toLocaleString()}원</div>
+                `;
+            }
+            ['f2', 'f3', 'f4'].forEach(f => renderCalendar(f));
+
+            if (typeof updateFinancialStatement === 'function') updateFinancialStatement(totalGross, totalOpex, fee, vat, ebitda, interest, tax, netProfit);
+        }
+
+        function toggleFloor(f) { state[f].active = getEl(`toggle-${f}`).checked; getEl(`card-${f}`).classList.toggle('inactive', !state[f].active); calculate(); }
+        function updateRooms(f, n) { state[f].rooms = n; for (let i = 1; i <= 4; i++) { const btn = getEl(`${f}-r${i}`); if (btn) btn.classList.toggle('active', i === n); } calculateCapex(); }
+        function selectBank(type, rate) { state.global.loanType = type; state.global.activeInterestRate = rate; document.querySelectorAll('.bank-btn, #bank-policy').forEach(el => el.classList.remove('active')); if (type === 'policy') getEl('bank-policy').classList.add('active'); else { const btn = getEl(`bank-${type}`); if (btn) btn.classList.add('active'); } calculate(); }
+        function updateCustomRate(val) { const r = parseFloat(val) || 0; if (state.global.loanType === 'custom') { state.global.activeInterestRate = r; calculate(); } }
+        function syncInput(k, v) { updateVal(k, parseFloat(v)); updateUI(k); calculate(); }
+        function handleTyping(k, v) { updateVal(k, parseFloat(rmc(v)) || 0); updateUI(k); calculate(); }
+        function updateVal(k, v) { if (k.startsWith('f') && k.includes('-')) { const [f, p] = k.split('-'); if (state[f]) { state[f][p] = v; } } else if (k === 'loan') state.capex.simpleAmt = v; else if (k === 'fixed') state.global.fixedCost = v; else if (k === 'var') state.global.varCostPerNight = v; }
+        function updateUI(k) { const ids = getIds(k); const val = k === 'loan' ? state.capex.simpleAmt : (k === 'fixed' ? state.global.fixedCost : (k === 'var' ? state.global.varCostPerNight : (k.includes('adr') ? state[k.split('-')[0]].adr : state[k.split('-')[0]].occ))); const sEl = getEl(ids[0]); if (sEl) sEl.value = val; const nEl = getEl(ids[1]); if (nEl) nEl.value = k.includes('occ') ? val : fwc(val); }
+        function updateTaxRate(v) { const el = getEl('tax-rate-disp'); if (el) el.innerText = v + '%'; calculate(); }
+        function toggleCapexMode() { state.capex.mode = getEl('capex-mode').checked ? 'detail' : 'simple'; getEl('capex-detail').classList.toggle('hidden', state.capex.mode === 'simple'); calculateCapex(); }
+        function setFurnitureGrade(g) { state.capex.furnGrade = g;['low', 'mid', 'high'].forEach(x => { const btn = getEl(`furn-${x}`); if (btn) btn.classList.toggle('active', x === g); }); calculateCapex(); }
+        function calculateCapex() { if (state.capex.mode === 'detail') { const c = parseInt(getEl('const-cost-input').value); const dEl = getEl('const-cost-display'); if (dEl) dEl.innerText = fwc(c / 10000) + '만원'; const fCost = { low: 8000000, mid: 15000000, high: 25000000 }[state.capex.furnGrade]; const rooms = state.f2.rooms + state.f3.rooms + state.f4.rooms; const lEl = getEl('calc-loan-amt'); if (lEl) lEl.innerText = fwc((c * BUILDING_AREA + fCost * rooms) * 0.8) + '원'; } calculate(); }
+        function applyCalculatedLoan() { const el = getEl('calc-loan-amt'); if (el) syncInput('loan', parseInt(rmc(el.innerText))); }
+        function runZeroPointScenario(type) { let t = 0; if (type === 'loss') t = -10000; if (type === 'profit') t = 10000; runTargetProfitScenario(t.toString()); }
+        function runRandom() { ['f2', 'f3', 'f4'].forEach(f => { state[f].adr = (Math.floor(Math.random() * 60) + 10) * 10000; state[f].occ = Math.floor(Math.random() * 85) + 10; }); syncAllInputs(); calculate(); }
+        function syncAllInputs() { ['f2', 'f3', 'f4'].forEach(f => { updateUI(`${f}-adr`); updateUI(`${f}-occ`); }); }
+
+        function renderCalendar(floor) {
+            const grid = getEl(`calendar-grid-${floor}`); if (!grid) return;
+            const fState = state[floor];
+            const occDisp = getEl(`occ-${floor}-disp`); if (occDisp) occDisp.innerText = fState.active ? Math.round(fState.occ) + '%' : 'OFF';
+            grid.innerHTML = '';
+            if (!fState.active) { for (let i = 0; i < 30; i++) { const d = document.createElement('div'); d.className = 'cal-day'; grid.appendChild(d); } return; }
+
+            const targetBooked = Math.round(30 * (fState.occ / 100));
+            const days = new Array(30).fill(0);
+            let indices = Array.from({ length: 30 }, (_, i) => i);
+            indices.sort(() => Math.random() - 0.5);
+            for (let i = 0; i < targetBooked; i++) days[indices[i]] = 1;
+            days.forEach(booked => { const d = document.createElement('div'); d.className = booked ? 'cal-day booked' : 'cal-day'; grid.appendChild(d); });
+        }
+
+        function updateFinancialStatement(rev, opex, fee, vat, ebitda, interest, tax, netProfit) {
+            // Helpers
+            const set = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = fwc(val); };
+
+            // --- Cost Classification for GAAP ---
+            // COGS (Cost of Goods Sold/Service) = Variable Costs (Cleaning, Laundry, Amenities)
+            // SG&A (Selling, General, Admin) = Fixed Costs (Labor, Util) + Selling (Platform Fee)
+
+            const fixedCost = state.global.fixedCost; // Total Fixed
+            const totalVarCost = opex - fixedCost; // COGS (Assumption)
+
+            // SG&A Breakdown
+            const sgaSelling = fee; // Booking Fee
+            const sgaAdmin = fixedCost; // Includes Utilities, Labor, Maint (Simplified)
+            const sgaTotal = sgaSelling + sgaAdmin + (state.global.vat ? vat : 0); // Include VAT in SG&A if strictly treating as cost
+
+            // Depreciation
+            const capex = state.capex.simpleAmt;
+            const depPerMonth = Math.round(capex / 60);
+
+            // --- Projection Logic (Growth Assumptions) ---
+            const growthRate = 0.05; // 5% Revenue Growth
+            const costInf = 0.03; // 3% Cost Inflation
+
+            // Year 1 (Base - Annualized)
+            const y1_Rev = rev * 12;
+            const y1_COGS = totalVarCost * 12;
+            const y1_GP = y1_Rev - y1_COGS;
+            const y1_SGA = sgaTotal * 12;
+            const y1_OpInc = y1_GP - y1_SGA; // Should match EBITDA? 
+            // ebitda = rev - opex - fee - vat.
+            // My calc: GP - SGA = (Rev - Var) - (Fee + Fixed + Vat) = Rev - Var - Fee - Fixed - Vat. Matches.
+            const y1_Dep = depPerMonth * 12;
+            const y1_Int = interest * 12;
+            const y1_EBT = y1_OpInc - y1_Dep - y1_Int;
+            const y1_Tax = tax * 12;
+            const y1_NI = y1_EBT - y1_Tax;
+
+            // Year 2 (Growth)
+            const y2_Rev = y1_Rev * (1 + growthRate);
+            const y2_COGS = y1_COGS * (1 + costInf);
+            const y2_GP = y2_Rev - y2_COGS;
+            // Split SGA for projection:
+            const annualFee = fee * 12;
+            const annualFixed = (fixedCost + (state.global.vat ? vat : 0)) * 12;
+            // Fee component uses growthRate (revenue based), Fixed uses costInf
+            const y2_SGA_Projected = (annualFee * (1 + growthRate)) + (annualFixed * (1 + costInf));
+
+            const y2_OpInc = y2_GP - y2_SGA_Projected;
+            const y2_Dep = y1_Dep; // Straight line
+            const y2_Int = y1_Int; // Interest Only loan assumed
+            const y2_EBT = y2_OpInc - y2_Dep - y2_Int;
+            const y2_Tax = y2_EBT > 0 ? y2_EBT * (state.global.taxRate / 100) : 0;
+            const y2_NI = y2_EBT - y2_Tax;
+
+            // Year 3
+            const y3_Rev = y2_Rev * (1 + growthRate);
+            const y3_COGS = y2_COGS * (1 + costInf);
+            const y3_GP = y3_Rev - y3_COGS;
+
+            // Fee uses revenue growth, Fixed uses cost inflation
+            const y3_SGA_Projected = (annualFee * (1 + growthRate) ** 2) + (annualFixed * (1 + costInf) ** 2);
+
+            const y3_OpInc = y3_GP - y3_SGA_Projected;
+            const y3_Dep = y1_Dep;
+            const y3_Int = y1_Int;
+            const y3_EBT = y3_OpInc - y3_Dep - y3_Int;
+            const y3_Tax = y3_EBT > 0 ? y3_EBT * (state.global.taxRate / 100) : 0;
+            const y3_NI = y3_EBT - y3_Tax;
+
+
+            // --- Render Income Statement ---
+            // Year 1
+            set('is-rev-y1', y1_Rev);
+            set('is-cogs-y1', '-' + fwc(y1_COGS));
+            set('is-gp-y1', y1_GP);
+            set('is-sga-total-y1', '-' + fwc(y1_SGA));
+            set('is-sga-fee-y1', '-' + fwc(fee * 12));
+            set('is-sga-fix-y1', '-' + fwc(annualFixed));
+            set('is-op-y1', y1_OpInc);
+            set('is-dep-y1', '-' + fwc(y1_Dep));
+            set('is-int-y1', '-' + fwc(y1_Int));
+            set('is-ebt-y1', y1_EBT);
+            set('is-tax-y1', '-' + fwc(y1_Tax));
+            set('is-ni-y1', y1_NI);
+
+            // Year 2
+            set('is-rev-y2', y2_Rev);
+            set('is-cogs-y2', '-' + fwc(y2_COGS));
+            set('is-gp-y2', y2_GP);
+            set('is-sga-total-y2', '-' + fwc(y2_SGA_Projected));
+            set('is-sga-fee-y2', '-' + fwc(annualFee * (1 + growthRate)));
+            set('is-sga-fix-y2', '-' + fwc(annualFixed * (1 + costInf)));
+            set('is-op-y2', y2_OpInc);
+            set('is-dep-y2', '-' + fwc(y2_Dep));
+            set('is-int-y2', '-' + fwc(y2_Int));
+            set('is-ebt-y2', y2_EBT);
+            set('is-tax-y2', '-' + fwc(y2_Tax));
+            set('is-ni-y2', y2_NI);
+
+            // Year 3
+            set('is-rev-y3', y3_Rev);
+            set('is-cogs-y3', '-' + fwc(y3_COGS));
+            set('is-gp-y3', y3_GP);
+            set('is-sga-total-y3', '-' + fwc(y3_SGA_Projected));
+            set('is-sga-fee-y3', '-' + fwc(annualFee * (1 + growthRate) ** 2));
+            set('is-sga-fix-y3', '-' + fwc(annualFixed * (1 + costInf) ** 2));
+            set('is-op-y3', y3_OpInc);
+            set('is-dep-y3', '-' + fwc(y3_Dep));
+            set('is-int-y3', '-' + fwc(y3_Int));
+            set('is-ebt-y3', y3_EBT);
+            set('is-tax-y3', '-' + fwc(y3_Tax));
+            set('is-ni-y3', y3_NI);
+
+
+            // --- Cash Flow Statement ---
+            // Operating CF = Net Income + Depreciation (Non-cash expense added back)
+            const ni = netProfit; // Monthly Net Income
+            const ocfAnnual = (ni + depPerMonth) * 12;
+            set('fs-cf-ni', fwc(y1_NI));
+            set('fs-cf-dep', fwc(y1_Dep));
+            set('fs-cf-operating', fwc(ocfAnnual));
+
+            // Investing CF = -Capex (Initial investment)
+            // Use proper CAPEX from state (not hardcoded 600M)
+            const initialCapex = state.capex.simpleAmt;
+            set('fs-cf-capex', '-' + fwc(initialCapex));
+            set('fs-cf-investing', '-' + fwc(initialCapex));
+
+            // Financing CF = +Loan (from state.capex.simpleAmt)
+            // Assumption: Loan covers 100% of Capex or explicit Loan amount?
+            // In simulator, 'start' or 'loan' is the investment amount.
+            // Let's assume Loan Logic: Loan Amount = state.capex.simpleAmt
+            const loanAmt = state.capex.simpleAmt;
+            set('fs-cf-loan', fwc(loanAmt));
+            set('fs-cf-financing', fwc(loanAmt));
+
+            // Net Cash Change (Year 0/1)
+            // Net Cash = Loan (Inflow) - Capex (Outflow) + OCF (Year 1)
+            const netCashChange = loanAmt - initialCapex + ocfAnnual;
+            set('fs-cf-net', fwc(netCashChange));
+
+            // --- Investment Metrics ---
+            // 1. Cap Rate = NOI / Total Value
+            // Total Value: Land + Bldg (30억 fixed) + Remodeling (Capex).
+            const landBldgValue = 3000000000;
+            const totalInvestmentValue = landBldgValue + state.capex.simpleAmt;
+            const capRate = (y1_OpInc / totalInvestmentValue) * 100; // OpInc is EBITDA here
+            document.getElementById('fs-metric-cap').innerText = capRate.toFixed(2) + '%';
+
+            // 2. ROE = Net Income / Equity
+            // Equity = Total Investment Value - Loan.
+            // If Loan = Capex, then Equity = LandBldgValue (30억).
+            const equity = totalInvestmentValue - loanAmt;
+            const roe = (equity > 0) ? (y1_NI / equity) * 100 : 0;
+            document.getElementById('fs-metric-roe').innerText = roe.toFixed(2) + '%';
+
+            // 3. DSCR = NOI / Debt Service
+            const annualDebtService = y1_Int;
+            const dscr = (annualDebtService > 0) ? (y1_OpInc / annualDebtService) : 0;
+            document.getElementById('fs-metric-dscr').innerText = dscr.toFixed(2) + 'x';
+
+            // 4. Cash on Cash = Pre-Tax Cash Flow / Equity
+            const preTaxCF = y1_OpInc - annualDebtService;
+            const coc = (equity > 0) ? (preTaxCF / equity) * 100 : 0;
+            document.getElementById('fs-metric-coc').innerText = coc.toFixed(2) + '%';
+        }
+
+    </script>
+</body>
+
+</html>```
